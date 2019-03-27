@@ -1,5 +1,3 @@
-package main.java;
-
 public class SayHello {
 
     public int hello(String greeting) {
