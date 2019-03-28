@@ -1,8 +1,10 @@
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -13,7 +15,7 @@ public class DatabaseJSON {
 
     private String filePath;
 
-    public DatabaseJSON(String filePath){
+    public DatabaseJSON(String filePath) {
         this.filePath = filePath;
     }
 
@@ -21,7 +23,7 @@ public class DatabaseJSON {
         JSONParser parser = new JSONParser();
         File filePath = new File(this.filePath);
         JSONObject databaseJSONObject = (JSONObject) parser.parse(new FileReader(filePath));
-
+        System.out.println(databaseJSONObject);
         return databaseJSONObject;
     }
 
@@ -31,7 +33,7 @@ public class DatabaseJSON {
         return arrayJSON;
     }
 
-    public List<User> getUsers(JSONArray arrayJSON){
+    public List<User> getUsers(JSONArray arrayJSON) {
         List<User> users = new ArrayList<>();
         for (int i = 0; i < arrayJSON.size(); i++) {
             JSONObject obj = (JSONObject) arrayJSON.get(i);
@@ -47,7 +49,7 @@ public class DatabaseJSON {
         return users;
     }
 
-    public List<Message> userSentMessages(long userId, JSONArray arrayJSON){
+    public List<Message> userSentMessages(long userId, JSONArray arrayJSON) {
         List<Message> messages = new ArrayList<>();
 
         // Object that holds the user data
@@ -68,7 +70,7 @@ public class DatabaseJSON {
         return messages;
     }
 
-    public List<Message> userReceivedMessages(long userId, JSONArray arrayJSON){
+    public List<Message> userReceivedMessages(long userId, JSONArray arrayJSON) {
         List<Message> messages = new ArrayList<>();
 
         // Object that holds the user data
@@ -89,7 +91,12 @@ public class DatabaseJSON {
         return messages;
     }
 
-    public void addSentMessage(long userId, long receiverId, String message, JSONArray arrayJSON) throws Exception{
+    public void addSentMessage(long userId, long receiverId, String message) throws Exception {
+
+        // File copy
+        JSONObject databaseJSON = createDatabase();
+        JSONArray oldArrayJSON = this.getArrayJSON(databaseJSON, "client");
+        JSONArray arrayJSON = this.getArrayJSON(databaseJSON, "client");
 
         JSONObject userData = (JSONObject) arrayJSON.get((int) (userId - 1));
         JSONArray userSentMessages = (JSONArray) userData.get("sent_messages");
@@ -100,9 +107,20 @@ public class DatabaseJSON {
         messageData.put("message", message);
 
         userSentMessages.add(messageData);
-        System.out.println(messageData);
-        Files.write(Paths.get("client_db.json"), userSentMessages.toJSONString().getBytes(), StandardOpenOption.APPEND);
 
+        if (!oldArrayJSON.equals(arrayJSON)) {
+            arrayJSON.add(userSentMessages);
+
+            databaseJSON.remove(oldArrayJSON);
+            databaseJSON.put("client", arrayJSON);
+
+            System.out.println(messageData);
+            // Rewriting the file
+            try (FileWriter file = new FileWriter("client_db.json")) {
+                file.write(databaseJSON.toJSONString());
+                System.out.println(databaseJSON);
+            }
+        }
     }
 
 }

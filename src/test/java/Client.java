@@ -29,7 +29,7 @@ public class Client {
 
         // Adding the message to the database
         // SEDA MITTE KASUTADA, keerab lappesse faili
-        // databaseJSON.addSentMessage(users.get(0).getId(), users.get(1).getId(), args[1], arrayJSON);
+        databaseJSON.addSentMessage(users.get(0).getId(), users.get(1).getId(), args[1]);
 
         List<Message> sentMessages = databaseJSON.userSentMessages(users.get(0).getId(), arrayJSON);
         System.out.println(users.get(0).getUsername() + "'s sent messages");
