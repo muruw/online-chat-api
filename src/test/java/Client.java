@@ -12,39 +12,7 @@ import java.util.List;
 public class Client {
 
     public static void main(String[] args) throws Exception {
-
-
-        // JSON Stuff
-        String filepath = "client_db.json";
-        DatabaseJSON databaseJSON = new DatabaseJSON(filepath);
-        JSONObject usersObject = databaseJSON.createDatabase();
-        JSONArray arrayJSON = databaseJSON.getArrayJSON(usersObject, "client");
-
-
-        List<User> users = databaseJSON.getUsers(arrayJSON);
-        System.out.println("Users: ");
-        for (User user : users) {
-            System.out.println(user.getId() + "; " + user.getUsername());
-        }
-
-        // Adding the message to the database
-        // SEDA MITTE KASUTADA, keerab lappesse faili
-        databaseJSON.addSentMessage(users.get(0).getId(), users.get(1).getId(), args[1]);
-
-        List<Message> sentMessages = databaseJSON.userSentMessages(users.get(0).getId(), arrayJSON);
-        System.out.println(users.get(0).getUsername() + "'s sent messages");
-        for (Message message : sentMessages) {
-            System.out.println(message.getMessageType() + "; " + message.getMessage());
-        }
-
-        List<Message> receivedMessages = databaseJSON.userReceivedMessages(users.get(1).getId(), arrayJSON);
-        System.out.println(users.get(1).getUsername() + "'s received messages");
-        for (Message receivedMessage : receivedMessages) {
-            System.out.println(receivedMessage.getMessageType() + "; " + receivedMessage.getMessage());
-        }
-
-
-        // Echo
+        // Clientis tuleb muuta saatmist natuke
         try (Socket socket = new Socket("localhost", 1337);
              DataOutputStream outData = new DataOutputStream(socket.getOutputStream());
              DataInputStream inData = new DataInputStream(socket.getInputStream())) {
