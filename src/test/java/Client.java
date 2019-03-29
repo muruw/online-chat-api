@@ -12,41 +12,7 @@ import java.util.List;
 public class Client {
 
     public static void main(String[] args) throws Exception {
-
-        // JSON Stuff
-        String filepath = "client_db.json";
-        DatabaseJSON databaseJSON = new DatabaseJSON(filepath);
-        JSONObject database = databaseJSON.createDatabase();
-        JSONArray usersJSON = databaseJSON.getArrayJSON(database, "client");
-        System.out.println(usersJSON);
-        JSONArray orderJSON = databaseJSON.getArrayJSON(database, "client_order");
-        System.out.println(orderJSON);
-
-        List<User> users = databaseJSON.getUsers(usersJSON);
-        System.out.println("Users: ");
-        for (User user : users) {
-            System.out.println(user.getId() + "; " + user.getUsername());
-        }
-
-        // Adding the message to the database
-        // ARGS[2] - saatja ARGS[3] - SAAJA
-        databaseJSON.addSentMessage(Long.parseLong(args[2]) , Long.parseLong(args[3]), args[1], database,  usersJSON, orderJSON);
-        databaseJSON.addReceivedMessage(Long.parseLong(args[3]) , Long.parseLong(args[2]), args[1], database,  usersJSON, orderJSON);
-
-        List<Message> sentMessages = databaseJSON.userSentMessages(users.get(0).getId(), usersJSON);
-        System.out.println(users.get(0).getUsername() + "'s sent messages");
-        for (Message message : sentMessages) {
-            System.out.println(message.getMessageType() + "; " + message.getMessage());
-        }
-
-        List<Message> receivedMessages = databaseJSON.userReceivedMessages(users.get(1).getId(), usersJSON);
-        System.out.println(users.get(1).getUsername() + "'s received messages");
-        for (Message receivedMessage : receivedMessages) {
-            System.out.println(receivedMessage.getMessageType() + "; " + receivedMessage.getMessage());
-        }
-
-
-        // Echo
+        // Clientis tuleb muuta saatmist natuke
         try (Socket socket = new Socket("localhost", 1337);
              DataOutputStream outData = new DataOutputStream(socket.getOutputStream());
              DataInputStream inData = new DataInputStream(socket.getInputStream())) {
