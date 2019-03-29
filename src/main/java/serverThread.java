@@ -98,7 +98,7 @@ public class serverThread implements Runnable {
             if (type == 1) {
                 String text = socketIn.readUTF();
                 database.addSentMessage(senderID, receiverID, text, usersObject,usersJSON,orderJSON);
-                database.addSentMessage(receiverID, senderID, text, usersObject,usersJSON,orderJSON);
+                database.addReceivedMessage(receiverID, senderID, text, usersObject,usersJSON,orderJSON);
                 writeMessage(socketOut, senderID, receiverID);
                 System.out.println("saadetud sõnumid tagasi");
             } else if (type == 0) {
