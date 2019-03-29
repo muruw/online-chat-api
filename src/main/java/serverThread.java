@@ -1,25 +1,50 @@
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
+import javax.xml.crypto.Data;
 import java.io.*;
 import java.net.Socket;
 import java.nio.file.Path;
+import java.util.List;
 
 import static java.nio.file.Files.readAllBytes;
 
 public class serverThread implements Runnable {
     Socket socket;
+    DatabaseJSON database;
+    JSONObject usersObject;
+    JSONArray arrayJSON;
 
-    public serverThread(Socket socket) {
+
+    public serverThread(Socket socket, DatabaseJSON database) throws Exception {
         this.socket = socket;
+        this.database = database;
+        this.usersObject = database.createDatabase();
+        this.arrayJSON = database.getArrayJSON(usersObject, "client");
     }
 
-    static void writeMessageEcho(DataOutputStream socketOut, String text) throws Exception {
-        var buffer = new ByteArrayOutputStream();
-        try (var out = new DataOutputStream(buffer)) {
-            out.writeUTF(text);
+    // saadab hetkel tagasi mõlema id-d vastavalt kas nad olid sõnumi saatja v saaja
+    // ja ss sõnumi enda ka saadab
+    void writeMessage(DataOutputStream socketOut, long senderID, long receiverID) throws Exception {
+        List<Message> messagesBetweentheIDsInorder = this.database.userReceivedMessages(senderID,this.arrayJSON);
+        //messaged võiks uusimast vanimani sortitud ka olla (võiks olla messagel ka kas sent v saadud küljes olla)
+        //ning mitte ainult received aga prgu lihtsalt kohahoidjaks
+        for (Message message : messagesBetweentheIDsInorder) {
+            var buffer = new ByteArrayOutputStream();
+            try (var out = new DataOutputStream(buffer)) {
+                out.writeUTF(message.getMessage());
+            }
+            byte[] value = buffer.toByteArray();
+            if (message.getMessageType() == 0) { //kui saatis ise
+                socketOut.writeLong(senderID);
+                socketOut.writeLong(receiverID);
+            }
+            if (message.getMessageType() == 1) { //kui talle saadeti
+                socketOut.writeLong(receiverID);
+                socketOut.writeLong(senderID);
+            }
+            socketOut.write(value);
         }
-        byte[] value = buffer.toByteArray();
-        socketOut.writeUTF("echo");
-        socketOut.writeInt(value.length);
-        socketOut.write(value);
     }
 
     static void writeMessageFile(DataOutputStream socketOut, byte[] content) throws Exception {
@@ -63,14 +88,17 @@ public class serverThread implements Runnable {
         try (socket;
              DataInputStream socketIn = new DataInputStream(socket.getInputStream());
              DataOutputStream socketOut = new DataOutputStream(socket.getOutputStream())) {
-            String type = socketIn.readUTF();
-            String text = socketIn.readUTF();
+            int type = socketIn.readInt();
+            long senderID = socketIn.readLong();
+            long receiverID = socketIn.readLong();
             System.out.println(type);
-            if (type.equals("echo")) {
-                writeMessageEcho(socketOut, text);
-                System.out.println("saadetud echo");
-            } else if (type.equals("file")) {
-                writeMessageFile(socketOut, processMessageFile(text));
+            if (type == 1) {
+                String text = socketIn.readUTF();
+                //database.addSentMessage(senderID, receiverID, text); ei tea kas veel töötab
+                writeMessage(socketOut, senderID, receiverID);
+                System.out.println("saadetud sõnumid tagasi");
+            } else if (type == 0) {
+                writeMessage(socketOut, senderID, receiverID);
             } else {
                 throw new IllegalArgumentException("type " + type + " pole sobiv");
             }
