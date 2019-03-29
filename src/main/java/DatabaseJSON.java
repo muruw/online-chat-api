@@ -64,28 +64,39 @@ public class DatabaseJSON {
         return users;
     }
 
+    //with id ja userarray gets user objekt with correct id, if not user with such id return null
+    public JSONObject getUser(long neededId, JSONArray arrayJSON) {
+        for (int i = 0; i < arrayJSON.size(); i++) {
+            JSONObject obj = (JSONObject) arrayJSON.get(i);
+            long userId = (long) obj.get("id");
+            if (userId == neededId) {
+                return obj;
+            }
+        }
+        return null;
+    }
+
     /**
      *
      * @param userId Id of the user, whose sent messages the application shows
      * @param arrayJSON Arrays of users
      * @return List of messages sent by the specific user
      */
-    public List<Message> userSentMessages(long userId, JSONArray arrayJSON) {
+    public List<Message> userAllSentMessages(long userId, JSONArray arrayJSON) {
 
         List<Message> messages = new ArrayList<>();
 
         // Object that holds the user data
-        JSONObject obj = (JSONObject) arrayJSON.get((int) (userId - 1));
+        JSONObject obj = this.getUser(userId, arrayJSON);
 
         // Creating an array of sent_messages
         JSONArray messagesArrayJSON = (JSONArray) obj.get("sent_messages");
         for (int i = 0; i < messagesArrayJSON.size(); i++) {
             JSONObject data = (JSONObject) messagesArrayJSON.get(i);
 
-            long sender = (long) data.get("receiver");
             String userMessage = (String) data.get("message");
 
-            Message message = new Message(sender, userMessage);
+            Message message = new Message(0, userMessage);
             messages.add(message);
         }
 
@@ -98,27 +109,74 @@ public class DatabaseJSON {
      * @param arrayJSON Arrays of users
      * @return List of messages sent by the specific user
      */
-    public List<Message> userReceivedMessages(long userId, JSONArray arrayJSON) {
+    public List<Message> userAllReceivedMessages(long userId, JSONArray arrayJSON) {
 
         List<Message> messages = new ArrayList<>();
 
         // Object that holds the user data
-        JSONObject obj = (JSONObject) arrayJSON.get((int) (userId - 1));
+        JSONObject obj = this.getUser(userId, arrayJSON);
 
         // Creating an array of messages(sent or received, depends on the parameter)
         JSONArray messagesArrayJSON = (JSONArray) obj.get("received_messages");
         for (int i = 0; i < messagesArrayJSON.size(); i++) {
             JSONObject data = (JSONObject) messagesArrayJSON.get(i);
 
-            long messageType = (long) data.get("user");
             String userMessage = (String) data.get("message");
 
-            Message message = new Message(messageType, userMessage);
+            Message message = new Message(1, userMessage);
             messages.add(message);
         }
 
         return messages;
     }
+
+    //gets all the sent messages of a person in a specific private chat/convo
+    public List<Message> userConvoSent(long userId,long recieverId, JSONArray arrayJSON) {
+        List<Message> messages = new ArrayList<>();
+
+        // Object that holds the user data
+        JSONObject obj = this.getUser(userId, arrayJSON);
+
+        // Creating an array of sent_messages
+        JSONArray messagesArrayJSON = (JSONArray) obj.get("sent_messages");
+        for (int i = 0; i < messagesArrayJSON.size(); i++) {
+            JSONObject data = (JSONObject) messagesArrayJSON.get(i);
+
+            long receiver = (long) data.get("receiver");
+            if (receiver == recieverId) {
+                String userMessage = (String) data.get("message");
+                Message message = new Message(0, userMessage);
+                messages.add(message);
+            }
+        }
+        return messages;
+    }
+
+    //gets all the received messages of a person in a specific private chat/convo
+    public List<Message> userConvoRecieved(long userId ,long senderId, JSONArray arrayJSON) {
+        List<Message> messages = new ArrayList<>();
+
+        // Object that holds the user data
+        JSONObject obj = this.getUser(userId, arrayJSON);
+
+        // Creating an array of sent_messages
+        JSONArray messagesArrayJSON = (JSONArray) obj.get("received_messages");
+        for (int i = 0; i < messagesArrayJSON.size(); i++) {
+            JSONObject data = (JSONObject) messagesArrayJSON.get(i);
+
+            long user = (long) data.get("user");
+            if (user == senderId) {
+                String userMessage = (String) data.get("message");
+                Message message = new Message(1, userMessage);
+                messages.add(message);
+            }
+        }
+        return messages;
+    }
+
+
+
+
 
     /**
      * Adds a message to the JSON database sent by user
@@ -132,7 +190,7 @@ public class DatabaseJSON {
      */
     public void addSentMessage(long userId, long receiverId, String message, JSONObject databaseJSON, JSONArray usersJSON, JSONArray orderJSON) throws Exception {
 
-        JSONArray userSentMessages = (JSONArray) ((JSONObject) usersJSON.get((int) (userId - 1))).get("sent_messages");
+        JSONArray userSentMessages = (JSONArray) (this.getUser(userId, usersJSON).get("sent_messages"));
 
         // Adding the message to the JSON file
         JSONObject messageData = new JSONObject();
@@ -160,7 +218,7 @@ public class DatabaseJSON {
      */
     public void addReceivedMessage(long userId, long receiverId, String message, JSONObject databaseJSON, JSONArray usersJSON, JSONArray orderJSON) throws Exception {
 
-        JSONArray userSentMessages = (JSONArray) ((JSONObject) usersJSON.get((int) (userId - 1))).get("received_messages");
+        JSONArray userSentMessages = (JSONArray) (this.getUser(userId, usersJSON).get("received_messages"));
 
         // Adding the message to the JSON file
         JSONObject messageData = new JSONObject();

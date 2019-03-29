@@ -13,23 +13,26 @@ public class serverThread implements Runnable {
     Socket socket;
     DatabaseJSON database;
     JSONObject usersObject;
-    JSONArray arrayJSON;
+    JSONArray usersJSON;
+    JSONArray orderJSON;
 
 
     public serverThread(Socket socket, DatabaseJSON database) throws Exception {
         this.socket = socket;
         this.database = database;
         this.usersObject = database.createDatabase();
-        this.arrayJSON = database.getArrayJSON(usersObject, "client");
+        this.usersJSON = database.getArrayJSON(usersObject, "client");
+        this.orderJSON = database.getArrayJSON(usersObject, "client_order");
     }
 
     // saadab hetkel tagasi mõlema id-d vastavalt kas nad olid sõnumi saatja v saaja
-    // ja ss sõnumi enda ka saadab
+    // ja ss sõnumi enda ka saadab (kõikide id vaheliste sõnumitega tehakse nii)
     void writeMessage(DataOutputStream socketOut, long senderID, long receiverID) throws Exception {
-        List<Message> messagesBetweentheIDsInorder = this.database.userReceivedMessages(senderID,this.arrayJSON);
+        List<Message> messagesBetweentheIDs = this.database.userConvoSent(senderID,receiverID,this.usersJSON);
+        List<Message> recieved = this.database.userConvoRecieved(senderID,receiverID,this.usersJSON);
+        messagesBetweentheIDs.addAll(recieved);
         //messaged võiks uusimast vanimani sortitud ka olla (võiks olla messagel ka kas sent v saadud küljes olla)
-        //ning mitte ainult received aga prgu lihtsalt kohahoidjaks
-        for (Message message : messagesBetweentheIDsInorder) {
+        for (Message message : messagesBetweentheIDs) {
             var buffer = new ByteArrayOutputStream();
             try (var out = new DataOutputStream(buffer)) {
                 out.writeUTF(message.getMessage());
@@ -94,7 +97,8 @@ public class serverThread implements Runnable {
             System.out.println(type);
             if (type == 1) {
                 String text = socketIn.readUTF();
-                //database.addSentMessage(senderID, receiverID, text); ei tea kas veel töötab
+                database.addSentMessage(senderID, receiverID, text, usersObject,usersJSON,orderJSON);
+                database.addSentMessage(receiverID, senderID, text, usersObject,usersJSON,orderJSON);
                 writeMessage(socketOut, senderID, receiverID);
                 System.out.println("saadetud sõnumid tagasi");
             } else if (type == 0) {
