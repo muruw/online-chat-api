@@ -32,12 +32,8 @@ public class serverThread implements Runnable {
         List<Message> recieved = this.database.userConvoRecieved(senderID,receiverID,this.usersJSON);
         messagesBetweentheIDs.addAll(recieved);
         //messaged võiks uusimast vanimani sortitud ka olla (võiks olla messagel ka kas sent v saadud küljes olla)
+        socketOut.writeInt(messagesBetweentheIDs.size());
         for (Message message : messagesBetweentheIDs) {
-            var buffer = new ByteArrayOutputStream();
-            try (var out = new DataOutputStream(buffer)) {
-                out.writeUTF(message.getMessage());
-            }
-            byte[] value = buffer.toByteArray();
             if (message.getMessageType() == 0) { //kui saatis ise
                 socketOut.writeLong(senderID);
                 socketOut.writeLong(receiverID);
@@ -46,7 +42,7 @@ public class serverThread implements Runnable {
                 socketOut.writeLong(receiverID);
                 socketOut.writeLong(senderID);
             }
-            socketOut.write(value);
+            socketOut.writeUTF(message.getMessage());
         }
     }
 
