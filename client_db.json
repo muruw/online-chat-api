@@ -1,0 +1,70 @@
+{
+    "client":[
+        {
+            "id":1,
+            "client_name":"muruw",
+            "sent_messages":[
+                {
+                    "receiver":2,
+                    "message":"Tere ainsy"
+                },
+                {
+                    "receiver":2,
+                    "message":"csi?"
+                },
+                {
+                    "receiver":2,
+                    "message":"Tere"
+                }
+            ],
+			"received_messages":[
+                {
+                    "user":1,
+                    "message":"Testin salvestamist"
+                },
+                {
+                    "user":1,
+                    "message":"apexit?"
+                },
+                {
+                    "user":1,
+                    "message":"Tere"
+                }
+            ]
+        },
+		{
+            "id":2,
+            "client_name":"ainsy",
+            "sent_messages":[
+                {
+                    "receiver":1,
+                    "message":"Testin salvestamist"
+                },
+                {
+                    "receiver":1,
+                    "message":"apexit?"
+                },
+                {
+                    "receiver":1,
+                    "message":"Tere"
+                }
+            ],
+			"received_messages":[
+                {
+                    "user":2,
+                    "message":"Tere ainsy"
+                },
+                {
+                    "user":2,
+                    "message":"csi?"
+                },
+                {
+                    "user":2,
+                    "user":"Tere"
+                }
+            ]
+        }
+    ], 
+	"client_order":
+		["id", "client_name", "sent_messages", "received_messages"]
+}
