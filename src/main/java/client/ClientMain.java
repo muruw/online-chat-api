@@ -1,4 +1,4 @@
-package Client;
+package client;
 
 /*
 Main client class that sets everything up and looks up saved data

@@ -1,13 +1,10 @@
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 
 public class Client {
 
@@ -40,6 +37,7 @@ public class Client {
         socketOut.writeUTF(type);
         socketOut.writeUTF(text);
     }
+
     static byte[] readMessage(DataInputStream socketIn) throws Exception {
         String type = socketIn.readUTF();
         int length = socketIn.readInt();

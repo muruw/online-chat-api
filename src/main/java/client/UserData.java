@@ -1,4 +1,4 @@
-package Client;
+package client;
 
 /* Holds data about the current user, set when running the client.
  */
