@@ -18,9 +18,35 @@ If messageType is 0 for example payload does not exist or client is just pinging
 10.Latest JSON file is stored and displayed to user in GUI
  */
 
+import org.junit.rules.Timeout;
+
+import java.util.concurrent.TimeUnit;
+
 // TODO: 3/30/19 get saved data
 public class ClientMain {
-    public static void main(String[] args) {
-        ClientGUI.main(args);
+    //miks static siin on hea halb? Ei ole enam private?
+    private static boolean running = false;
+
+//Threade peaks vist kasutama, et pingi checkimine toimuks kuskil mujal, Hetkel sleepib kogu clienti xd
+// TODO: 4/13/19 make a new thread or solve ping problem some other way. 
+    public static void main(String[] args) throws Exception {
+        while (true){
+            TimeUnit.SECONDS.sleep(10);
+            checkRun();
+            System.out.println(isRunning());
+        }
     }
+
+      public static void checkRun() throws Exception {
+        if(IO.ping()){
+            running = true;
+        }else{
+            running = false;
+        }
+    }
+
+    public static boolean isRunning() {
+        return running;
+    }
+
 }

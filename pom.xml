@@ -48,7 +48,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>1.6.0</version>
                 <configuration>
-                    <mainClass>client.ClientMain</mainClass>
+                    <mainClass>client.ClientGUI</mainClass>
                 </configuration>
             </plugin>
         </plugins>

@@ -23,7 +23,6 @@ public class Client {
                 byte[] recieved = readMessage(inData);
                 if (recieved != null) {
                     Files.write(file, recieved);
-                    System.out.println("faili sisu saadud ja salvestatud soovitud asukohta");
                 } else {
                     System.out.println("sisu puudus");
                 }

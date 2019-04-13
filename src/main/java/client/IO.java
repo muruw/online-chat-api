@@ -2,10 +2,7 @@ package client;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.IOException;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Arrays;
 
 /*
 This class handles pinging the server. Works on the premise that while Client is running, sends a message to server every n seconds and that server send message back.
@@ -13,13 +10,24 @@ IF messageType from server is ping then do nothing. IF no messageArrives, then d
 Immediately sends a ping with payload, if Response Sever calls IO out.
  */
 public class IO {
+    public static void main(String[] args) throws Exception {
+        ping();
+    }
     private boolean runningState;
 
-    public void ping() {
-
+    public static boolean ping() throws Exception {
+        try (Socket socket = new Socket("localhost", 1337);
+             DataOutputStream outData = new DataOutputStream(socket.getOutputStream());
+             DataInputStream inData = new DataInputStream(socket.getInputStream())) {
+            System.out.println("Ping sent");
+            writeMessage(outData, 1, 2, "");
+            return readMessage(inData);
+        }catch (Exception e){
+            return false;
+        }
     }
 
-    public static void sendMessage(String message, UserData user) throws IOException {
+    public static void sendMessage(String message, UserData user) throws Exception {
        /* int messageType;
 
         if (message.isEmpty()) {
@@ -36,6 +44,7 @@ public class IO {
             outData.writeInt(messageType);
 
         }*/
+/*
         try (Socket socket = new Socket("localhost", 1337);
              DataOutputStream outData = new DataOutputStream(socket.getOutputStream());
              DataInputStream inData = new DataInputStream(socket.getInputStream())) {
@@ -55,7 +64,10 @@ public class IO {
         }
 
     }
-    static void writeMessage (DataOutputStream socketOut,long sender, long receiver, String text) throws Exception {
+*/
+    }
+
+    static void writeMessage(DataOutputStream socketOut, long sender, long receiver, String text) throws Exception {
         if (text.equals("")) {
             socketOut.writeInt(0);
         } else {
@@ -67,13 +79,25 @@ public class IO {
             socketOut.writeUTF(text);
         }
     }
-    static void readMessage (DataInputStream socketIn) throws Exception {
-        int msgcount = socketIn.readInt();
-        for (int i = 0; i < msgcount; i++) {
-            System.out.print("saatja id " + socketIn.readLong());
-            System.out.print(" saaja id " + socketIn.readLong());
-            System.out.print(" sõnum " + socketIn.readUTF());
-            System.out.println(" ");
+
+    static boolean readMessage(DataInputStream socketIn) throws Exception {
+        try {
+            int messageType = socketIn.readInt();
+            if (messageType == 0) {
+                System.out.println("Ping got");
+                return true;
+            }
+            int msgcount = socketIn.readInt();
+            for (int i = 0; i < msgcount; i++) {
+                System.out.print("saatja id " + socketIn.readLong());
+                System.out.print(" saaja id " + socketIn.readLong());
+                System.out.print(" sõnum " + socketIn.readUTF());
+                System.out.println(" ");
+            }
+            //for testing purposes this is false.
+            return false;
+        }catch(Exception e){
+            return false;
         }
     }
 }

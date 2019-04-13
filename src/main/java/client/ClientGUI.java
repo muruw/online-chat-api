@@ -1,6 +1,7 @@
 package client;
 
 import javafx.application.Application;
+import javafx.beans.binding.BooleanBinding;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -12,6 +13,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -39,6 +41,9 @@ public class ClientGUI extends Application {
         // TODO: 3/30/19 show user displayed messages
         VBox userMessages = new VBox();
         HBox textAreaWithSend = new HBox();
+        // TODO: 4/13/19 Change online circle color using ClientMain.getRunning() boolean value 
+        Circle online = new Circle(30,Color.RED);
+        
 
 
         Button sendButton = new Button("Send");
@@ -50,7 +55,7 @@ public class ClientGUI extends Application {
                 }else{
                     try {
                         IO.sendMessage(textArea.getText(),userData);
-                    } catch (IOException e) {
+                    } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                     textArea.clear();
@@ -61,7 +66,7 @@ public class ClientGUI extends Application {
         border.setPadding(new Insets(15, 12, 15, 12));
         border.setStyle("-fx-background-color: #336699;");
 
-        textAreaWithSend.getChildren().addAll(textArea,sendButton);
+        textAreaWithSend.getChildren().addAll(textArea,sendButton,online);
         border.setTop(navigationBar);
         border.setLeft(userNames);
         border.setBottom(textAreaWithSend);
