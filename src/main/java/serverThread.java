@@ -34,7 +34,7 @@ public class serverThread implements Runnable {
         List<Message> recieved = this.database.userConvoRecieved(senderID, receiverID, this.usersJSON);
         messagesBetweentheIDs.addAll(recieved);
         //messaged võiks uusimast vanimani sortitud ka olla (võiks olla messagel ka kas sent v saadud küljes olla)
-        //Pigem timestamp küljes
+        socketOut.writeInt(messagesBetweentheIDs.size());
         for (Message message : messagesBetweentheIDs) {
             if (message.getMessageType() == 0) { //kui saatis ise
                 socketOut.writeLong(senderID);
@@ -60,9 +60,9 @@ public class serverThread implements Runnable {
             System.out.println(type);
             if (type == 1) {
                 String text = socketIn.readUTF();
-                database.addSentMessage(senderID, receiverID, text, usersObject, usersJSON, orderJSON);
-                database.addReceivedMessage(receiverID, senderID, text, usersObject, usersJSON, orderJSON);
-                writeMessage(socketOut, senderID, receiverID,1);
+                database.addSentMessage(senderID, receiverID, text, usersObject,usersJSON,orderJSON);
+                database.addReceivedMessage(receiverID, senderID, text, usersObject,usersJSON,orderJSON);
+                writeMessage(socketOut, senderID, receiverID, 1);
                 System.out.println("saadetud sõnumid tagasi");
             } else if (type == 0) {
                 System.out.println("ping got");

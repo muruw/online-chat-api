@@ -1,59 +1,58 @@
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
+import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class Client {
 
     public static void main(String[] args) throws Exception {
         // Clientis tuleb muuta saatmist natuke
-        try (Socket socket = new Socket("localhost", 1337);
+        try (Socket socket = new Socket("51.15.118.3", 1337);
              DataOutputStream outData = new DataOutputStream(socket.getOutputStream());
              DataInputStream inData = new DataInputStream(socket.getInputStream())) {
-            System.out.println(args[0]);
-            if (args[0].equals("echo")) {
-                writeMessage(outData, String.join(" ", args).substring(5), args[0]);
+            ArrayList<String> sõnumisisu = new ArrayList<>(Arrays.asList(args));
+            sõnumisisu.remove(0);
+            sõnumisisu.remove(0);
+            if (args.length == 2) {
+                writeMessage(outData, Long.parseLong(args[0]), Long.parseLong(args[1]), "");
                 readMessage(inData);
-            } else if (args[0].equals("file")) {
-                writeMessage(outData, args[1], args[0]);
-                Path file = Paths.get(args[2]);
-                byte[] recieved = readMessage(inData);
-                if (recieved != null) {
-                    Files.write(file, recieved);
-                } else {
-                    System.out.println("sisu puudus");
-                }
+            } else if (args.length >= 3) {
+                String sõnum = String.join(" ", sõnumisisu);
+                writeMessage(outData, Long.parseLong(args[0]), Long.parseLong(args[1]), sõnum);
+                readMessage(inData);
             } else {
                 System.out.println("pole õige type");
             }
         }
     }
 
-    static void writeMessage(DataOutputStream socketOut, String text, String type) throws Exception {
-        socketOut.writeUTF(type);
-        socketOut.writeUTF(text);
-    }
-
-    static byte[] readMessage(DataInputStream socketIn) throws Exception {
-        String type = socketIn.readUTF();
-        int length = socketIn.readInt();
-        byte[] value = new byte[length];
-        socketIn.readFully(value);
-        if (type.equals("echo")) {
-            processMessageEcho(value);
-
-        } else if (type.equals("file")) {
-            return value;
-        } else if (type.equals("error")) {
-            System.out.println("ei leidnud faili või anti absolute path");
+    static void writeMessage(DataOutputStream socketOut, long sender, long receiver, String text) throws Exception {
+        if (text.equals("")) {
+            socketOut.writeInt(0);
         } else {
-            System.out.println("serverilt tuli pask tagasi");
+            socketOut.writeInt(1);
         }
-
-        return null;
+        socketOut.writeLong(sender);
+        socketOut.writeLong(receiver);
+        if (!text.equals("")) {
+            socketOut.writeUTF(text);
+        }
+    }
+    static void readMessage(DataInputStream socketIn) throws Exception {
+        int msgcount = socketIn.readInt();
+        for (int i = 0; i < msgcount; i++) {
+            System.out.print("saatja id " + socketIn.readLong());
+            System.out.print(" saaja id " + socketIn.readLong());
+            System.out.print(" sõnum " + socketIn.readUTF());
+            System.out.println(" ");
+        }
     }
 
     static void processMessageEcho(byte[] value) throws Exception {
