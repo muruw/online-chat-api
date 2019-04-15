@@ -24,12 +24,7 @@ public class serverThread implements Runnable {
 
     // saadab hetkel tagasi mõlema id-d vastavalt kas nad olid sõnumi saatja v saaja
     // ja ss sõnumi enda ka saadab (kõikide id vaheliste sõnumitega tehakse nii)
-    void writeMessage(DataOutputStream socketOut, long senderID, long receiverID, int messageType) throws Exception {
-        if(messageType == 0) {
-            socketOut.writeInt(0);
-            return;
-        }
-
+    void writeMessage(DataOutputStream socketOut, long senderID, long receiverID) throws Exception {
         List<Message> messagesBetweentheIDs = this.database.userConvoSent(senderID, receiverID, this.usersJSON);
         List<Message> recieved = this.database.userConvoRecieved(senderID, receiverID, this.usersJSON);
         messagesBetweentheIDs.addAll(recieved);
@@ -62,11 +57,11 @@ public class serverThread implements Runnable {
                 String text = socketIn.readUTF();
                 database.addSentMessage(senderID, receiverID, text, usersObject,usersJSON,orderJSON);
                 database.addReceivedMessage(receiverID, senderID, text, usersObject,usersJSON,orderJSON);
-                writeMessage(socketOut, senderID, receiverID, 1);
+                writeMessage(socketOut, senderID, receiverID);
                 System.out.println("saadetud sõnumid tagasi");
             } else if (type == 0) {
                 System.out.println("ping got");
-                writeMessage(socketOut, senderID, receiverID, 0);
+                writeMessage(socketOut, senderID, receiverID);
             } else{
                 throw new IllegalArgumentException("type " + type + " pole sobiv");
             }

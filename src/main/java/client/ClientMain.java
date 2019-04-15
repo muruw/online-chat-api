@@ -18,6 +18,8 @@ If messageType is 0 for example payload does not exist or client is just pinging
 10.Latest JSON file is stored and displayed to user in GUI
  */
 
+import java.util.concurrent.TimeUnit;
+
 // TODO: 3/30/19 get saved data
 public class ClientMain {
     //miks static siin on hea halb? Ei ole enam private?
@@ -32,13 +34,13 @@ public class ClientMain {
     }
 
     public static void main(String[] args) throws Exception {
-        setUser();
-/*        while (true){
+        //setUser();
+       while (true){
             TimeUnit.SECONDS.sleep(5);
             checkRun();
             System.out.println(isRunning());
-        }*/
-        SendMessage("test", 2);
+        }
+        //SendMessage("test", 2);
     }
 
     public static void checkRun() throws Exception {
