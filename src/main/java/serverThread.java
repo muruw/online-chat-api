@@ -79,12 +79,14 @@ public class serverThread implements Runnable {
 
     public void run() {
         Socket socket = this.socket;
+
         try (socket;
              DataInputStream socketIn = new DataInputStream(socket.getInputStream());
              DataOutputStream socketOut = new DataOutputStream(socket.getOutputStream())) {
             int type = socketIn.readInt();
             long senderID = socketIn.readLong();
             long chatid = socketIn.readLong();
+
             System.out.println(type);
             if (type == 1) {
                 String text = socketIn.readUTF();
