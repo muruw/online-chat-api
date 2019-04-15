@@ -12,6 +12,7 @@ public class serverThread implements Runnable {
     JSONObject usersObject;
     JSONArray usersJSON;
     JSONArray orderJSON;
+    JSONArray chatsJSON;
 
 
     public serverThread(Socket socket, DatabaseJSON database) throws Exception {
@@ -20,6 +21,7 @@ public class serverThread implements Runnable {
         this.usersObject = database.createDatabase();
         this.usersJSON = database.getArrayJSON(usersObject, "client");
         this.orderJSON = database.getArrayJSON(usersObject, "client_order");
+        this.chatsJSON = database.getArrayJSON(usersObject, "chats");
     }
 
     // saadab hetkel tagasi mõlema id-d vastavalt kas nad olid sõnumi saatja v saaja
@@ -31,14 +33,7 @@ public class serverThread implements Runnable {
         //messaged võiks uusimast vanimani sortitud ka olla (võiks olla messagel ka kas sent v saadud küljes olla)
         socketOut.writeInt(messagesBetweentheIDs.size());
         for (Message message : messagesBetweentheIDs) {
-            if (message.getMessageType() == 0) { //kui saatis ise
-                socketOut.writeLong(senderID);
-                socketOut.writeLong(receiverID);
-            }
-            if (message.getMessageType() == 1) { //kui talle saadeti
-                socketOut.writeLong(receiverID);
-                socketOut.writeLong(senderID);
-            }
+            socketOut.writeLong(message.getSenderid());
             socketOut.writeUTF(message.getMessage());
         }
     }
@@ -51,18 +46,17 @@ public class serverThread implements Runnable {
              DataOutputStream socketOut = new DataOutputStream(socket.getOutputStream())) {
             int type = socketIn.readInt();
             long senderID = socketIn.readLong();
-            long receiverID = socketIn.readLong();
+            long chatid = socketIn.readLong();
             System.out.println(type);
             if (type == 1) {
                 String text = socketIn.readUTF();
-                database.addSentMessage(senderID, receiverID, text, usersObject,usersJSON,orderJSON);
-                database.addReceivedMessage(receiverID, senderID, text, usersObject,usersJSON,orderJSON);
-                writeMessage(socketOut, senderID, receiverID);
+                database.addSentMessage(senderID, chatid, text, usersObject,usersJSON,orderJSON);
+                //database.addReceivedMessage(chatid, senderID, text, usersObject,usersJSON,orderJSON, chatsJSON);
+                writeMessage(socketOut, senderID, chatid);
                 System.out.println("saadetud sõnumid tagasi");
             } else if (type == 0) {
-                System.out.println("ping got");
-                writeMessage(socketOut, senderID, receiverID);
-            } else{
+                writeMessage(socketOut, senderID, chatid);
+            } else {
                 throw new IllegalArgumentException("type " + type + " pole sobiv");
             }
         } catch (Exception e) {
