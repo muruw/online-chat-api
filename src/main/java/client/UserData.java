@@ -3,23 +3,29 @@ package client;
 /* Holds data about the current user, set when running the client.
  */
 
-public class UserData {
-    private int userID;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 
-    private int port;
-    private String host;
+public class UserData {
+    private long userID;
+
 
     public UserData(int userID, int port, String host) {
         this.userID = userID;
-        this.port = port;
-        this.host = host;
+
     }
 
-    public int getPort() {
-        return port;
+
+    public long getUserID() {
+        return userID;
     }
 
-    public String getHost() {
-        return host;
+    public void writeUserData() throws FileNotFoundException, UnsupportedEncodingException {
+        PrintWriter writer = new PrintWriter("userDATA.txt", "Utf-8");
+        writer.println(this.userID);
+        writer.close();
     }
+
+
 }

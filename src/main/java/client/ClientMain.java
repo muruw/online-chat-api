@@ -18,29 +18,33 @@ If messageType is 0 for example payload does not exist or client is just pinging
 10.Latest JSON file is stored and displayed to user in GUI
  */
 
-import org.junit.rules.Timeout;
-
-import java.util.concurrent.TimeUnit;
-
 // TODO: 3/30/19 get saved data
 public class ClientMain {
     //miks static siin on hea halb? Ei ole enam private?
     private static boolean running = false;
+    private static UserData user;
 
-//Threade peaks vist kasutama, et pingi checkimine toimuks kuskil mujal, Hetkel sleepib kogu clienti xd
-// TODO: 4/13/19 make a new thread or solve ping problem some other way. 
-    public static void main(String[] args) throws Exception {
-        while (true){
-            TimeUnit.SECONDS.sleep(10);
-            checkRun();
-            System.out.println(isRunning());
-        }
+    //Threade peaks vist kasutama, et pingi checkimine toimuks kuskil mujal, Hetkel sleepib kogu clienti xd
+// TODO: 4/13/19 make a new thread or solve ping problem some other way.
+
+    public static void setUser() {
+        ClientMain.user = new UserData(1, 1337, "");
     }
 
-      public static void checkRun() throws Exception {
-        if(IO.ping()){
+    public static void main(String[] args) throws Exception {
+        setUser();
+/*        while (true){
+            TimeUnit.SECONDS.sleep(5);
+            checkRun();
+            System.out.println(isRunning());
+        }*/
+        SendMessage("test", 2);
+    }
+
+    public static void checkRun() throws Exception {
+        if (IO.ping()) {
             running = true;
-        }else{
+        } else {
             running = false;
         }
     }
@@ -49,4 +53,7 @@ public class ClientMain {
         return running;
     }
 
+    public static void SendMessage(String message, long receiver) throws Exception {
+        IO.sendMessage(message, user.getUserID(), receiver);
+    }
 }
