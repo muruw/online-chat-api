@@ -21,8 +21,9 @@ public class IO {
              DataOutputStream outData = new DataOutputStream(socket.getOutputStream());
              DataInputStream inData = new DataInputStream(socket.getInputStream())) {
             System.out.println("Ping sent");
-            writeMessage(outData, 1, 2, "");
-            return readMessage(inData);
+            writeMessage(outData, 1, 1, "");
+            readMessage(inData);
+            return true;
         } catch (Exception e) {
             return false;
         }
@@ -43,7 +44,7 @@ public class IO {
     }
 
 
-    static void writeMessage(DataOutputStream socketOut, long sender, long receiver, String text) throws Exception {
+    static void writeMessage(DataOutputStream socketOut, long sender, long chatID, String text) throws Exception {
         //if sent message is empty consider it a ping
         if (text.equals("")) {
             socketOut.writeInt(0);
@@ -51,34 +52,19 @@ public class IO {
             socketOut.writeInt(1);
         }
         socketOut.writeLong(sender);
-        socketOut.writeLong(receiver);
+        socketOut.writeLong(chatID);
         if (!text.equals("")) {
             socketOut.writeUTF(text);
         }
     }
 
-    static boolean readMessage(DataInputStream socketIn) throws Exception {
-        try {
-            int messageType = socketIn.readInt();
-            //if is empty ping
-            if (messageType == 0) {
-                System.out.println("Ping got");
-                return true;
+    static void readMessage(DataInputStream socketIn) throws Exception {
+                int msgcount = socketIn.readInt();
+                for (int i = 0; i < msgcount; i++) {
+                    System.out.print("saatja id " + socketIn.readLong());
+                    System.out.print(" sõnum " + socketIn.readUTF());
+                    System.out.println(" ");
+                }
             }
-
-            //if message is returned
-            // TODO: 4/15/19 Change that one big message is accepted. If that is the case parseIt 
-            int msgcount = socketIn.readInt();
-            for (int i = 0; i < msgcount; i++) {
-                System.out.print("saatja id " + socketIn.readLong());
-                System.out.print(" saaja id " + socketIn.readLong());
-                System.out.print(" sõnum " + socketIn.readUTF());
-                System.out.println(" ");
-            }
-            //for testing purposes this is false.
-            return false;
-        } catch (Exception e) {
-            return false;
-        }
-    }
 }
+

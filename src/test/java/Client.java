@@ -1,20 +1,15 @@
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.net.Socket;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 public class Client {
 
     public static void main(String[] args) throws Exception {
         // Clientis tuleb muuta saatmist natuke
-        try (Socket socket = new Socket("51.15.118.3", 1337);
+        try (Socket socket = new Socket("localhost", 1337);
              DataOutputStream outData = new DataOutputStream(socket.getOutputStream());
              DataInputStream inData = new DataInputStream(socket.getInputStream())) {
             ArrayList<String> sõnumisisu = new ArrayList<>(Arrays.asList(args));
@@ -45,11 +40,11 @@ public class Client {
             socketOut.writeUTF(text);
         }
     }
+
     static void readMessage(DataInputStream socketIn) throws Exception {
         int msgcount = socketIn.readInt();
         for (int i = 0; i < msgcount; i++) {
             System.out.print("saatja id " + socketIn.readLong());
-            System.out.print(" saaja id " + socketIn.readLong());
             System.out.print(" sõnum " + socketIn.readUTF());
             System.out.println(" ");
         }
