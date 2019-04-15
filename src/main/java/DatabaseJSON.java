@@ -213,32 +213,53 @@ public class DatabaseJSON {
     }
     /**
      * Adds a message to the JSON database sent by user
-     * @param userId Id of the user, whose received the message
-     * @param receiverId Id of the user who sent the message
+     * @param chatId Id of the chat, whose received the message
+     * @param senderId Id of the user who sent the message
      * @param message String type message
      * @param databaseJSON JSONObject type HashMap that shows the whole database
      * @param usersJSON JSONArray type, has all of the users in it
      * @param orderJSON JSONArray type, shows the order how the data should be shown
      * @throws Exception
      */
-   /* public void addReceivedMessage(long chatId, long senderid, String message, JSONObject databaseJSON, JSONArray usersJSON, JSONArray orderJSON, JSONArray chatsJson) throws Exception {
-        JSONArray userSentMessages = (JSONArray) (this.getUser(userId, usersJSON).get("received_messages"));
-        JSONObject messageData = new JSONObject();
-        messageData.put("sender", senderid);
-        messageData.put("chat-id", chatId);
-        messageData.put("message", message);
-        userSentMessages.add(messageData);
+    public void addReceivedMessage(long chatId, long senderId, String message, JSONObject databaseJSON, JSONArray usersJSON, JSONArray orderJSON, JSONArray chatsJSON) throws Exception {
+        JSONArray users = chatParticipants(chatId, chatsJSON);
+        for (Object id: users) {
+            long userid = Long.parseLong(id.toString());
+            JSONArray userSentMessages = (JSONArray) (this.getUser(userid, usersJSON).get("received_messages"));
+            JSONObject messageData = new JSONObject();
+            messageData.put("sender", senderId);
+            messageData.put("message", message);
+            messageData.put("chat-id", chatId);
+            userSentMessages.add(messageData);
+        }
 
         databaseJSON.put("client", usersJSON);
         databaseJSON.put("client_order", orderJSON);
+
 
         // Rewriting the file
         try (FileWriter file = new FileWriter("client_db.json")) {
             file.write(databaseJSON.toJSONString());
         }
+
     }
 
-    public void getUserChats() {
-
-    }*/
+    /**
+     *
+     * @param chatId
+     * @param chatsJson
+     * @return array of users in the given chat
+     */
+    public JSONArray chatParticipants(long chatId, JSONArray chatsJson){
+        // Looping the chats array to get the array of users
+        JSONArray users = new JSONArray();
+        for (int i = 0; i < chatsJson.size(); i++) {
+            JSONObject data = (JSONObject) chatsJson.get(i);
+            long id = (long) data.get("id");
+            if(id == chatId){
+                users = (JSONArray) data.get("users");
+            }
+        }
+        return users;
+    }
 }
