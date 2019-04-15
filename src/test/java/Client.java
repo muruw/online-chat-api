@@ -14,7 +14,7 @@ public class Client {
 
     public static void main(String[] args) throws Exception {
         // Clientis tuleb muuta saatmist natuke
-        try (Socket socket = new Socket("localhost", 1337);
+        try (Socket socket = new Socket("51.15.118.3", 1337);
              DataOutputStream outData = new DataOutputStream(socket.getOutputStream());
              DataInputStream inData = new DataInputStream(socket.getInputStream())) {
             ArrayList<String> sõnumisisu = new ArrayList<>(Arrays.asList(args));

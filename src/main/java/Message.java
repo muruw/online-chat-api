@@ -1,16 +1,20 @@
 public class Message {
 
-    private long messageType;
+    private long chatid;
+    private long senderid;
     private String message;
 
-    public Message(long messageType, String message){
-        this.messageType = messageType;
+    public Message(long chatid, long senderid,String message){
+        this.chatid = chatid;
+        this.senderid = senderid;
         this.message = message;
     }
 
-    public long getMessageType() {
-        return messageType;
+    public long getChatid() {
+        return chatid;
     }
+
+    public long getSenderid() { return senderid;}
 
     public String getMessage() {
         return message;
