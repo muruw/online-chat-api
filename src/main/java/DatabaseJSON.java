@@ -59,7 +59,6 @@ public class DatabaseJSON {
             User user = new User(userId, username);
             users.add(user);
         }
-
         return users;
     }
 
@@ -218,14 +217,16 @@ public class DatabaseJSON {
      * @throws Exception
      */
     public void addReceivedMessage(long chatId, long senderId, String message, JSONObject databaseJSON, JSONArray usersJSON, JSONArray orderJSON, JSONArray chatsJSON) throws Exception {
-
-        JSONArray userSentMessages = (JSONArray) (this.getUser(chatId, usersJSON).get("received_messages"));
-
-        JSONObject messageData = new JSONObject();
-        messageData.put("sender", senderId);
-        messageData.put("message", message);
-        messageData.put("chat-id", chatId);
-        userSentMessages.add(messageData);
+        JSONArray users = chatParticipants(chatId, chatsJSON);
+        for (Object id: users) {
+            long userid = Long.parseLong(id.toString());
+            JSONArray userSentMessages = (JSONArray) (this.getUser(userid, usersJSON).get("received_messages"));
+            JSONObject messageData = new JSONObject();
+            messageData.put("sender", senderId);
+            messageData.put("message", message);
+            messageData.put("chat-id", chatId);
+            userSentMessages.add(messageData);
+        }
 
         databaseJSON.put("client", usersJSON);
         databaseJSON.put("client_order", orderJSON);
@@ -244,7 +245,7 @@ public class DatabaseJSON {
      * @param chatsJson
      * @return array of users in the given chat
      */
-    public void chatParticipants(long chatId, long senderId, JSONArray chatsJson){
+    public JSONArray chatParticipants(long chatId, JSONArray chatsJson){
         // Looping the chats array to get the array of users
         JSONArray users = new JSONArray();
         for (int i = 0; i < chatsJson.size(); i++) {
@@ -254,11 +255,9 @@ public class DatabaseJSON {
                 users = (JSONArray) data.get("users");
             }
         }
-        for (int j = 0; j < users.size(); j++) {
-            long userId = (long) users.get(j);
-            // Siin saaks iseenesest tsükkliga addReceivedMessaget kasutada igale userile
-        }
-        System.out.println(users.toString());
+        return users;
     }
+
+
 
 }
