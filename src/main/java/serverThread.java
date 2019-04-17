@@ -60,7 +60,11 @@ public class serverThread implements Runnable {
                 database.newChat(firstid, secondid, databaseObject, chatsJSON); // mõlema inimese id-d
             } else if (type == 3) {
                 database.addToChat(firstid, secondid, databaseObject, chatsJSON); // chatiid ja lisatava id
-            } else {
+            } else if (type == 4) {
+                database.deleteChat(firstid, databaseObject, chatsJSON); //chati id mida kustutame
+            } else if (type == 5) {
+                database.removeFromChat(firstid, secondid, databaseObject, chatsJSON); //chati id ja inimese id keda eemaldame chatist
+            }else {
                 throw new IllegalArgumentException("type " + type + " pole sobiv");
             }
         } catch (Exception e) {

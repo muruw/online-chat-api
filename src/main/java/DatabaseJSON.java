@@ -297,12 +297,45 @@ public class DatabaseJSON {
         }
     }
 
-    public void removeFromChat(long chatid, long participant, JSONArray chatsJson) {
+    public void removeFromChat(long chatid, long participant, JSONObject databaseJson, JSONArray chatsJson) throws Exception {
+        JSONArray users = new JSONArray();
+        for (int i = 0; i < chatsJson.size(); i++) {
+            JSONObject data = (JSONObject) chatsJson.get(i);
+            long id = (long) data.get("id");
+            if(id == chatid){
+                chatsJson.remove(data);
+                users = (JSONArray) data.get("users");
+                for (int j = 0; j < users.size(); j++) {
+                    long userid = (long) users.get(j);
+                    if (userid == participant) {
+                        users.remove(userid);
+                        break;
+                    }
+                }
+                data.put("users", users);
+                chatsJson.add(data);
+            }
+        }
+        databaseJson.put("chats", chatsJson);
+        try (FileWriter file = new FileWriter("client_db.json")) {
+            file.write(databaseJson.toJSONString());
+        }
 
     }
 
-    public void deleteChat(long chatid, JSONArray chatsJson) {
-
+    public void deleteChat(long chatid, JSONObject databaseJson, JSONArray chatsJson) throws Exception {
+        JSONArray users = new JSONArray();
+        for (int i = 0; i < chatsJson.size(); i++) {
+            JSONObject data = (JSONObject) chatsJson.get(i);
+            long id = (long) data.get("id");
+            if(id == chatid){
+                chatsJson.remove(data);
+            }
+        }
+        databaseJson.put("chats", chatsJson);
+        try (FileWriter file = new FileWriter("client_db.json")) {
+            file.write(databaseJson.toJSONString());
+        }
     }
 
     public long biggestChatId(JSONArray chatsJson) {
