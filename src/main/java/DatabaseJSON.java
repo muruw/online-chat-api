@@ -262,4 +262,58 @@ public class DatabaseJSON {
         }
         return users;
     }
+
+    public void newChat(long participant1, long participant2, JSONObject databaseJSON, JSONArray chatsJson) throws Exception {
+        long biggestId = biggestChatId(chatsJson);
+        JSONObject chat = new JSONObject();
+        JSONArray participants = new JSONArray();
+        participants.add(participant1);
+        participants.add(participant2);
+        chat.put("id", biggestId + 1);
+        chat.put("users", participants);
+        chatsJson.add(chat);
+        databaseJSON.put("chats", chatsJson);
+        try (FileWriter file = new FileWriter("client_db.json")) {
+            file.write(databaseJSON.toJSONString());
+        }
+    }
+
+    public void addToChat(long chatid, long participant, JSONObject databaseJson, JSONArray chatsJson) throws Exception {
+        JSONArray users = new JSONArray();
+        for (int i = 0; i < chatsJson.size(); i++) {
+            JSONObject data = (JSONObject) chatsJson.get(i);
+            long id = (long) data.get("id");
+            if(id == chatid){
+                chatsJson.remove(data);
+                users = (JSONArray) data.get("users");
+                users.add(participant);
+                data.put("users", users);
+                chatsJson.add(data);
+            }
+        }
+        databaseJson.put("chats", chatsJson);
+        try (FileWriter file = new FileWriter("client_db.json")) {
+            file.write(databaseJson.toJSONString());
+        }
+    }
+
+    public void removeFromChat(long chatid, long participant, JSONArray chatsJson) {
+
+    }
+
+    public void deleteChat(long chatid, JSONArray chatsJson) {
+
+    }
+
+    public long biggestChatId(JSONArray chatsJson) {
+        long biggestId = 0;
+        for (int i = 0; i < chatsJson.size(); i++) {
+            JSONObject data = (JSONObject) chatsJson.get(i);
+            long id = (long) data.get("id");
+            if (id > biggestId) {
+                biggestId = id;
+            }
+        }
+        return biggestId;
+    }
 }

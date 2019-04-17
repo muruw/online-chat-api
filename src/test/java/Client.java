@@ -15,7 +15,15 @@ public class Client {
             ArrayList<String> sõnumisisu = new ArrayList<>(Arrays.asList(args));
             sõnumisisu.remove(0);
             sõnumisisu.remove(0);
-            if (args.length == 2) {
+            if (args[0].equals("create")) {
+                outData.writeInt(2);
+                outData.writeLong(Long.parseLong(args[1]));
+                outData.writeLong(Long.parseLong(args[2]));
+            } else if (args[0].equals("add")){
+                outData.writeInt(3);
+                outData.writeLong(Long.parseLong(args[1]));
+                outData.writeLong(Long.parseLong(args[2]));
+            } else if (args.length == 2) {
                 writeMessage(outData, Long.parseLong(args[0]), Long.parseLong(args[1]), "");
                 readMessage(inData);
             } else if (args.length >= 3) {
