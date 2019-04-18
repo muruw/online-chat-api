@@ -9,7 +9,7 @@ import java.util.List;
 public class serverThread implements Runnable {
     Socket socket;
     DatabaseJSON database;
-    JSONObject usersObject;
+    JSONObject databaseObject;
     JSONArray usersJSON;
     JSONArray orderJSON;
     JSONArray chatsJSON;
@@ -18,10 +18,10 @@ public class serverThread implements Runnable {
     public serverThread(Socket socket, DatabaseJSON database) throws Exception {
         this.socket = socket;
         this.database = database;
-        this.usersObject = database.createDatabase();
-        this.usersJSON = database.getArrayJSON(usersObject, "client");
-        this.orderJSON = database.getArrayJSON(usersObject, "client_order");
-        this.chatsJSON = database.getArrayJSON(usersObject, "chats");
+        this.databaseObject = database.createDatabase();
+        this.usersJSON = database.getArrayJSON(databaseObject, "client");
+        this.orderJSON = database.getArrayJSON(databaseObject, "client_order");
+        this.chatsJSON = database.getArrayJSON(databaseObject, "chats");
     }
 
     // saadab hetkel tagasi mõlema id-d vastavalt kas nad olid sõnumi saatja v saaja
@@ -45,17 +45,30 @@ public class serverThread implements Runnable {
              DataInputStream socketIn = new DataInputStream(socket.getInputStream());
              DataOutputStream socketOut = new DataOutputStream(socket.getOutputStream())) {
             int type = socketIn.readInt();
-            long senderID = socketIn.readLong();
-            long chatid = socketIn.readLong();
+            long firstid = socketIn.readLong(); //üldiselt ühendajaid, kui tahad chati inimesi lisada/removeida ss chatiid
+            long secondid = socketIn.readLong(); //üldielt chatiid, kui tahad chati inimesi lisada/removeida ss selle inimese id
             System.out.println(type);
             if (type == 1) {
                 String text = socketIn.readUTF();
-                database.addSentMessage(senderID, chatid, text, usersObject,usersJSON,orderJSON);
-                //database.addReceivedMessage(chatid, senderID, text, usersObject,usersJSON,orderJSON, chatsJSON);
-                writeMessage(socketOut, senderID, chatid);
+                database.addSentMessage(firstid, secondid, text, databaseObject,usersJSON,orderJSON); //saatja id ja chati kuhu saadab id
+                database.addReceivedMessage(secondid, firstid, text, databaseObject,usersJSON,orderJSON,chatsJSON); //chati id ja see kes sinna saadab id
+                writeMessage(socketOut, firstid, secondid);
                 System.out.println("saadetud sõnumid tagasi");
             } else if (type == 0) {
-                writeMessage(socketOut, senderID, chatid);
+                writeMessage(socketOut, firstid, secondid);
+            } else if (type == 2) {
+                database.newChat(firstid, secondid, databaseObject, chatsJSON); // mõlema inimese id-d
+            } else if (type == 3) {
+                database.addToChat(firstid, secondid, databaseObject, chatsJSON); // chatiid ja lisatava id
+            } else if (type == 4) {
+                database.deleteChat(firstid, databaseObject, usersJSON, chatsJSON); //chati id mida kustutame
+            } else if (type == 5) {
+                database.removeFromChat(firstid, secondid, databaseObject, usersJSON,chatsJSON); //chati id ja inimese id keda eemaldame chatist
+            } else if (type == 6) {
+                String username = socketIn.readUTF();
+                database.addUser(username, databaseObject, usersJSON);
+            } else if (type == 7) {
+                database.deleteUser(firstid, databaseObject, usersJSON);
             } else {
                 throw new IllegalArgumentException("type " + type + " pole sobiv");
             }
