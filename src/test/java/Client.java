@@ -31,6 +31,15 @@ public class Client {
                 outData.writeInt(5);
                 outData.writeLong(Long.parseLong(args[1]));
                 outData.writeLong(Long.parseLong(args[2]));
+            } else if (args[0].equals("user")) {
+                outData.writeInt(6);
+                outData.writeLong(Long.parseLong(args[1]));
+                outData.writeLong(Long.parseLong(args[1]));
+                outData.writeUTF(args[2]);
+            } else if (args[0].equals("deluser")) {
+                outData.writeInt(6);
+                outData.writeLong(Long.parseLong(args[1]));
+                outData.writeLong(Long.parseLong(args[2]));
             } else if (args.length == 2) {
                 writeMessage(outData, Long.parseLong(args[0]), Long.parseLong(args[1]), "");
                 readMessage(inData);

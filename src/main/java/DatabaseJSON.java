@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class DatabaseJSON {
@@ -225,12 +226,14 @@ public class DatabaseJSON {
         JSONArray users = chatParticipants(chatId, chatsJSON);
         for (Object id: users) {
             long userid = Long.parseLong(id.toString());
-            JSONArray userSentMessages = (JSONArray) (this.getUser(userid, usersJSON).get("received_messages"));
-            JSONObject messageData = new JSONObject();
-            messageData.put("sender", senderId);
-            messageData.put("message", message);
-            messageData.put("chat-id", chatId);
-            userSentMessages.add(messageData);
+            if (userid != senderId) {
+                JSONArray userSentMessages = (JSONArray) (this.getUser(userid, usersJSON).get("received_messages"));
+                JSONObject messageData = new JSONObject();
+                messageData.put("sender", senderId);
+                messageData.put("message", message);
+                messageData.put("chat-id", chatId);
+                userSentMessages.add(messageData);
+            }
         }
 
         databaseJSON.put("client", usersJSON);
@@ -264,7 +267,7 @@ public class DatabaseJSON {
     }
 
     public void newChat(long participant1, long participant2, JSONObject databaseJSON, JSONArray chatsJson) throws Exception {
-        long biggestId = biggestChatId(chatsJson);
+        long biggestId = biggestId(chatsJson);
         JSONObject chat = new JSONObject();
         JSONArray participants = new JSONArray();
         participants.add(participant1);
@@ -297,17 +300,18 @@ public class DatabaseJSON {
         }
     }
 
-    public void removeFromChat(long chatid, long participant, JSONObject databaseJson, JSONArray chatsJson) throws Exception {
+    public void removeFromChat(long chatid, long participant, JSONObject databaseJson, JSONArray usersJson, JSONArray chatsJson) throws Exception {
         JSONArray users = new JSONArray();
         for (int i = 0; i < chatsJson.size(); i++) {
             JSONObject data = (JSONObject) chatsJson.get(i);
             long id = (long) data.get("id");
-            if(id == chatid){
+            if (id == chatid){
                 chatsJson.remove(data);
                 users = (JSONArray) data.get("users");
                 for (int j = 0; j < users.size(); j++) {
                     long userid = (long) users.get(j);
                     if (userid == participant) {
+                        deleteChatHistory(chatid, participant, databaseJson, usersJson);
                         users.remove(userid);
                         break;
                     }
@@ -323,12 +327,15 @@ public class DatabaseJSON {
 
     }
 
-    public void deleteChat(long chatid, JSONObject databaseJson, JSONArray chatsJson) throws Exception {
-        JSONArray users = new JSONArray();
+    public void deleteChat(long chatid, JSONObject databaseJson, JSONArray usersJson, JSONArray chatsJson) throws Exception {
         for (int i = 0; i < chatsJson.size(); i++) {
             JSONObject data = (JSONObject) chatsJson.get(i);
             long id = (long) data.get("id");
             if(id == chatid){
+                JSONArray users = (JSONArray) data.get("users");
+                for (int j = 0; j < users.size(); j++) {
+                    deleteChatHistory(chatid, (long) users.get(j), databaseJson, usersJson);
+                }
                 chatsJson.remove(data);
             }
         }
@@ -338,10 +345,74 @@ public class DatabaseJSON {
         }
     }
 
-    public long biggestChatId(JSONArray chatsJson) {
+    public void addUser(String username, JSONObject databaseJson, JSONArray usersJson) throws Exception {
+        long biggestid = biggestId(usersJson);
+        JSONObject user = new JSONObject();
+        user.put("id", biggestid + 1);
+        user.put("sent_messages", new JSONArray());
+        user.put("received_messages", new JSONArray());
+        user.put("client_name", username);
+        usersJson.add(user);
+        databaseJson.put("client", usersJson);
+        try (FileWriter file = new FileWriter("client_db.json")) {
+            file.write(databaseJson.toJSONString());
+        }
+    }
+
+    public void deleteUser(long userid, JSONObject databaseJson, JSONArray usersJson) throws Exception {
+        for (int i = 0; i < usersJson.size(); i++) {
+            JSONObject data = (JSONObject) usersJson.get(i);
+            long id = (long) data.get("id");
+            if(id == userid){
+                usersJson.remove(data);
+            }
+        }
+        databaseJson.put("client", usersJson);
+        try (FileWriter file = new FileWriter("client_db.json")) {
+            file.write(databaseJson.toJSONString());
+        }
+    }
+
+    public void deleteChatHistory(long chatid, long userid, JSONObject databaseJson, JSONArray usersJson) throws Exception {
+        for (int i = 0; i < usersJson.size(); i++) {
+            JSONObject data = (JSONObject) usersJson.get(i);
+            long id = (long) data.get("id");
+            if (id == userid) {
+                usersJson.remove(data);
+                JSONArray sent = (JSONArray) data.get("sent_messages");
+                JSONArray newSent = new JSONArray();
+                JSONArray received = (JSONArray) data.get("received_messages");
+                JSONArray newRec = new JSONArray();
+                for (int j = 0; j < sent.size(); j++) {
+                    JSONObject msg = (JSONObject) sent.get(j);
+                    long thischatid = (long) msg.get("receiver");
+                    if (thischatid != chatid) {
+                        newSent.add(msg);
+                    }
+                }
+                for (int j = 0; j < received.size(); j++) {
+                    JSONObject msg = (JSONObject) received.get(j);
+                    long thischatid = (long) msg.get("chat-id");
+                    if (thischatid != chatid) {
+                        newRec.add(msg);
+                    }
+                }
+                data.put("sent_messages", newSent);
+                data.put("received_messages", newRec);
+                usersJson.add(data);
+            }
+        }
+        databaseJson.put("client", usersJson);
+        try (FileWriter file = new FileWriter("client_db.json")) {
+            file.write(databaseJson.toJSONString());
+        }
+
+    }
+
+    public long biggestId(JSONArray usersOrChatJson) {
         long biggestId = 0;
-        for (int i = 0; i < chatsJson.size(); i++) {
-            JSONObject data = (JSONObject) chatsJson.get(i);
+        for (int i = 0; i < usersOrChatJson.size(); i++) {
+            JSONObject data = (JSONObject) usersOrChatJson.get(i);
             long id = (long) data.get("id");
             if (id > biggestId) {
                 biggestId = id;

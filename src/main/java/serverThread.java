@@ -61,10 +61,15 @@ public class serverThread implements Runnable {
             } else if (type == 3) {
                 database.addToChat(firstid, secondid, databaseObject, chatsJSON); // chatiid ja lisatava id
             } else if (type == 4) {
-                database.deleteChat(firstid, databaseObject, chatsJSON); //chati id mida kustutame
+                database.deleteChat(firstid, databaseObject, usersJSON, chatsJSON); //chati id mida kustutame
             } else if (type == 5) {
-                database.removeFromChat(firstid, secondid, databaseObject, chatsJSON); //chati id ja inimese id keda eemaldame chatist
-            }else {
+                database.removeFromChat(firstid, secondid, databaseObject, usersJSON,chatsJSON); //chati id ja inimese id keda eemaldame chatist
+            } else if (type == 6) {
+                String username = socketIn.readUTF();
+                database.addUser(username, databaseObject, usersJSON);
+            } else if (type == 7) {
+                database.deleteUser(firstid, databaseObject, usersJSON);
+            } else {
                 throw new IllegalArgumentException("type " + type + " pole sobiv");
             }
         } catch (Exception e) {
