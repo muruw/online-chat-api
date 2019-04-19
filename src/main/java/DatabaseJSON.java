@@ -334,6 +334,7 @@ public class DatabaseJSON {
             if(id == chatid){
                 JSONArray users = (JSONArray) data.get("users");
                 for (int j = 0; j < users.size(); j++) {
+                    System.out.println((long) users.get(j));
                     deleteChatHistory(chatid, (long) users.get(j), databaseJson, usersJson);
                 }
                 chatsJson.remove(data);
@@ -387,6 +388,7 @@ public class DatabaseJSON {
                     JSONObject msg = (JSONObject) sent.get(j);
                     long thischatid = (long) msg.get("receiver");
                     if (thischatid != chatid) {
+                        System.out.println(thischatid + " " + chatid);
                         newSent.add(msg);
                     }
                 }
@@ -394,6 +396,7 @@ public class DatabaseJSON {
                     JSONObject msg = (JSONObject) received.get(j);
                     long thischatid = (long) msg.get("chat-id");
                     if (thischatid != chatid) {
+                        System.out.println(thischatid + " " + chatid);
                         newRec.add(msg);
                     }
                 }
