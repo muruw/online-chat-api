@@ -34,13 +34,15 @@ public class ClientMain {
     }
 
     public static void main(String[] args) throws Exception {
-        //setUser();
-       while (true){
-            TimeUnit.SECONDS.sleep(5);
-            checkRun();
-            System.out.println(isRunning());
-        }
-        //SendMessage("test", 2);
+        ClientGUI clientGUI = new ClientGUI();
+        clientGUI.addUserNames("Krister");
+        clientGUI.addUserNames("Peeter");
+        System.out.println(clientGUI.getOptions());
+        clientGUI.launcher(args);
+        TimeUnit.SECONDS.sleep(5);
+        clientGUI.addUserNames("Marcus");
+
+
     }
 
     public static void checkRun() throws Exception {

@@ -3,6 +3,8 @@ package client;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 /*
 This class handles pinging the server. Works on the premise that while Client is running, sends a message to server every n seconds and that server send message back.
@@ -29,16 +31,16 @@ public class IO {
         }
     }
 
-    public static void sendMessage(String message, long userID, long receiverID) throws Exception {
+    public static List<String> sendMessage(String message, long userID, long receiverID) throws Exception {
         int messageType = 1;
 
         System.out.println("test");
 
-        // TODO: 4/15/19 Use inData to confirm if message has arrived. If not send message again.
         try (Socket socket = new Socket("localhost", 1337);
              DataOutputStream outData = new DataOutputStream(socket.getOutputStream());
              DataInputStream inData = new DataInputStream(socket.getInputStream())) {
             writeMessage(outData, userID, receiverID, message);
+            return readMessage(inData);
         }
 
     }
@@ -58,13 +60,19 @@ public class IO {
         }
     }
 
-    static void readMessage(DataInputStream socketIn) throws Exception {
+    static List<String> readMessage(DataInputStream socketIn) throws Exception {
+        List<String> dataList = new ArrayList<>();
                 int msgcount = socketIn.readInt();
                 for (int i = 0; i < msgcount; i++) {
-                    System.out.print("saatja id " + socketIn.readLong());
-                    System.out.print(" sõnum " + socketIn.readUTF());
+                    long id = socketIn.readLong();
+                    String message = socketIn.readUTF();
+                    dataList.add(String.valueOf(id));
+                    dataList.add(message);
+                    System.out.print("saatja id " + id);
+                    System.out.print(" sõnum " + message);
                     System.out.println(" ");
                 }
+                return dataList;
             }
 }
 
