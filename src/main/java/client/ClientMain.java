@@ -18,7 +18,7 @@ If messageType is 0 for example payload does not exist or client is just pinging
 10.Latest JSON file is stored and displayed to user in GUI
  */
 
-import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
 
 // TODO: 3/30/19 get saved data
 public class ClientMain {
@@ -34,13 +34,14 @@ public class ClientMain {
     }
 
     public static void main(String[] args) throws Exception {
+        ArrayList<String> names = new ArrayList<>();
+        names.add("test");
+        names.add("Krister");
+
+
         ClientGUI clientGUI = new ClientGUI();
-        clientGUI.addUserNames("Krister");
-        clientGUI.addUserNames("Peeter");
-        System.out.println(clientGUI.getOptions());
+        clientGUI.addUserNames("test");
         clientGUI.launcher(args);
-        TimeUnit.SECONDS.sleep(5);
-        clientGUI.addUserNames("Marcus");
 
 
     }
