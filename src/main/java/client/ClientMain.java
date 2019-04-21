@@ -59,6 +59,6 @@ public class ClientMain {
     }
 
     public static void SendMessage(String message, long receiver) throws Exception {
-        IO.sendMessage(message, user.getUserID(), receiver);
+        IO.sendMessage(1,message, user.getUserID(), receiver);
     }
 }

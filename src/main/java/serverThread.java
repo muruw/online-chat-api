@@ -1,3 +1,4 @@
+import client.DatabaseFactory;
 import org.h2.tools.RunScript;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -38,6 +39,7 @@ public class serverThread implements Runnable {
         Collections.sort(messagesBetweentheIDs);
         //messaged võiks uusimast vanimani sortitud ka olla (võiks olla messagel ka kas sent v saadud küljes olla)
         socketOut.writeInt(messagesBetweentheIDs.size());
+
         for (Message message : messagesBetweentheIDs) {
             socketOut.writeLong(message.getSenderid());
             socketOut.writeUTF(message.getMessage());
@@ -54,7 +56,9 @@ public class serverThread implements Runnable {
             long secondid = socketIn.readLong(); //üldielt chatiid, kui tahad chati inimesi lisada/removeida ss selle inimese id
             System.out.println(type);
             if (type == 1) {
+
                 String text = socketIn.readUTF();
+                System.out.println(text);
                 String time = Instant.now().toString();
                 database.addSentMessage(firstid, secondid, text, time, databaseObject,usersJSON,orderJSON); //saatja id ja chati kuhu saadab id
                 database.addReceivedMessage(secondid, firstid, text, time, databaseObject,usersJSON,orderJSON,chatsJSON); //chati id ja see kes sinna saadab id
@@ -64,6 +68,7 @@ public class serverThread implements Runnable {
                 writeMessage(socketOut, firstid, secondid);
             } else if (type == 2) {
                 long thischatid = database.newChat(firstid, secondid, databaseObject, chatsJSON); // mõlema inimese id-d
+                System.out.println("serverHere");
                 socketOut.writeLong(thischatid);
             } else if (type == 3) {
                 database.addToChat(firstid, secondid, databaseObject, chatsJSON); // chatiid ja lisatava id
@@ -83,6 +88,7 @@ public class serverThread implements Runnable {
                     String pw = socketIn.readUTF();
                     if (type == 8) {
                         boolean success = factory.login(connection, un, pw);
+
                         if (success) {
                             socketOut.writeLong(factory.getUserId(connection, un));
                         } else {
@@ -95,6 +101,7 @@ public class serverThread implements Runnable {
                             long id = factory.getUserId(connection, un);
                             database.addUser(un, id, databaseObject, usersJSON);
                             socketOut.writeLong(id);
+                            System.out.println("database add was success");
                         } else {
                             socketOut.writeLong(-1);
                         }

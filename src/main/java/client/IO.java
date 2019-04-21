@@ -2,6 +2,7 @@ package client;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +24,7 @@ public class IO {
              DataOutputStream outData = new DataOutputStream(socket.getOutputStream());
              DataInputStream inData = new DataInputStream(socket.getInputStream())) {
             System.out.println("Ping sent");
-            writeMessage(outData, 1, 1, "");
+            writeMessage(0, outData, 1, 1, "");
             readMessage(inData);
             return true;
         } catch (Exception e) {
@@ -31,28 +32,74 @@ public class IO {
         }
     }
 
-    public static List<String> sendMessage(String message, long userID, long receiverID) throws Exception {
-        int messageType = 1;
+    public static List<String> sendMessage(int messageType, String message, long userID, long chatID) throws Exception {
+
 
         System.out.println("test");
 
         try (Socket socket = new Socket("localhost", 1337);
              DataOutputStream outData = new DataOutputStream(socket.getOutputStream());
              DataInputStream inData = new DataInputStream(socket.getInputStream())) {
-            writeMessage(outData, userID, receiverID, message);
+            writeMessage(messageType, outData, userID, chatID, message);
             return readMessage(inData);
         }
 
     }
 
+    public static long newChat(long userID, long receiverID) throws IOException {
+        long chatId;
 
-    static void writeMessage(DataOutputStream socketOut, long sender, long chatID, String text) throws Exception {
-        //if sent message is empty consider it a ping
-        if (text.equals("")) {
-            socketOut.writeInt(0);
-        } else {
-            socketOut.writeInt(1);
+        try (Socket socket = new Socket("localhost", 1337);
+             DataOutputStream outData = new DataOutputStream(socket.getOutputStream());
+             DataInputStream inData = new DataInputStream(socket.getInputStream())) {
+
+            outData.writeInt(2);
+            outData.writeLong(userID);
+            outData.writeLong(receiverID);
+
+            System.out.println("here");
+            chatId = inData.readLong();
         }
+        return chatId;
+    }
+
+    public static long register(String username, String password) throws Exception {
+        long usersId;
+        try (Socket socket = new Socket("localhost", 1337);
+             DataOutputStream outData = new DataOutputStream(socket.getOutputStream());
+             DataInputStream inData = new DataInputStream(socket.getInputStream())) {
+            outData.writeInt(9);
+            outData.writeLong(0);
+            outData.writeLong(0);
+            outData.writeUTF(username);
+            outData.writeUTF(password);
+
+            usersId = inData.readLong();
+        }
+        return usersId;
+    }
+
+
+    public static long login(String username, String password) throws Exception {
+        long usersId;
+        try (Socket socket = new Socket("localhost", 1337);
+             DataOutputStream outData = new DataOutputStream(socket.getOutputStream());
+             DataInputStream inData = new DataInputStream(socket.getInputStream())) {
+            outData.writeInt(8);
+            outData.writeLong(0);
+            outData.writeLong(0);
+            outData.writeUTF(username);
+            outData.writeUTF(password);
+
+            usersId = inData.readLong();
+        }
+        return usersId;
+    }
+
+
+    static void writeMessage(int messageType, DataOutputStream socketOut, long sender, long chatID, String text) throws Exception {
+        //if sent message is empty consider it a ping
+        socketOut.writeInt(messageType);
         socketOut.writeLong(sender);
         socketOut.writeLong(chatID);
         if (!text.equals("")) {
@@ -62,17 +109,20 @@ public class IO {
 
     static List<String> readMessage(DataInputStream socketIn) throws Exception {
         List<String> dataList = new ArrayList<>();
-                int msgcount = socketIn.readInt();
-                for (int i = 0; i < msgcount; i++) {
-                    long id = socketIn.readLong();
-                    String message = socketIn.readUTF();
-                    dataList.add(String.valueOf(id));
-                    dataList.add(message);
-                    System.out.print("saatja id " + id);
-                    System.out.print(" sõnum " + message);
-                    System.out.println(" ");
-                }
-                return dataList;
-            }
+
+        int msgcount = socketIn.readInt();
+        for (int i = 0; i < msgcount; i++) {
+            long id = socketIn.readLong();
+            String message = socketIn.readUTF();
+            dataList.add(String.valueOf(id));
+            dataList.add(message);
+            System.out.print("saatja id " + id);
+            System.out.print(" sõnum " + message);
+            System.out.println(" ");
+        }
+        return dataList;
+    }
+
+
 }
 
