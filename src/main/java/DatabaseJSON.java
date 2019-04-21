@@ -5,9 +5,7 @@ import org.json.simple.parser.JSONParser;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class DatabaseJSON {
 
@@ -19,7 +17,6 @@ public class DatabaseJSON {
 
     /**
      * Creates and returns a database object
-     *
      * @return JSONObject, database object
      * @throws Exception
      */
@@ -33,7 +30,8 @@ public class DatabaseJSON {
     }
 
     /**
-     * @param jsonObj   Database object
+     *
+     * @param jsonObj Database object
      * @param jsonTable name of the column
      * @return
      */
@@ -49,7 +47,7 @@ public class DatabaseJSON {
      * @param arrayJSON JSONArray of users
      * @return List of users currently in the database
      */
-   public List<User> getUsers(JSONArray arrayJSON) {
+    public List<User> getUsers(JSONArray arrayJSON) {
         List<User> users = new ArrayList<>();
         for (int i = 0; i < arrayJSON.size(); i++) {
             JSONObject obj = (JSONObject) arrayJSON.get(i);
@@ -78,7 +76,8 @@ public class DatabaseJSON {
     }
 
     /**
-     * @param userId    Id of the user, whose sent messages the application shows
+     *
+     * @param userId Id of the user, whose sent messages the application shows
      * @param arrayJSON Arrays of users
      * @return List of messages sent by the specific user
      */
@@ -96,9 +95,9 @@ public class DatabaseJSON {
 
             String userMessage = (String) data.get("message");
             long chatid = (long) data.get("receiver");
+            String time = (String) data.get("time");
 
-
-            Message message = new Message(chatid, userId, userMessage);
+            Message message = new Message(chatid, userId, userMessage, time);
             messages.add(message);
         }
 
@@ -106,7 +105,8 @@ public class DatabaseJSON {
     }
 
     /**
-     * @param userId    Id of the user, whose received messages the application shows
+     *
+     * @param userId Id of the user, whose received messages the application shows
      * @param arrayJSON Arrays of users
      * @return List of messages sent by the specific user
      */
@@ -125,8 +125,9 @@ public class DatabaseJSON {
             String userMessage = (String) data.get("message");
             long chatid = (long) data.get("chat-id");
             long sender = (long) data.get("sender");
+            String time = (String) data.get("time");
 
-            Message message = new Message(chatid, sender, userMessage);
+            Message message = new Message(chatid, sender, userMessage, time);
             messages.add(message);
         }
 
@@ -148,7 +149,8 @@ public class DatabaseJSON {
             long receiver = (long) data.get("receiver");
             if (receiver == recieverId) {
                 String userMessage = (String) data.get("message");
-                Message message = new Message(recieverId, userId, userMessage);
+                String time = (String) data.get("time");
+                Message message = new Message(recieverId, userId, userMessage, time);
                 messages.add(message);
             }
         }
@@ -171,7 +173,8 @@ public class DatabaseJSON {
             if (chat == chatid) {
                 String userMessage = (String) data.get("message");
                 long sender = (long) data.get("sender");
-                Message message = new Message(chatid, sender, userMessage);
+                String time = (String) data.get("time");
+                Message message = new Message(chatid, sender, userMessage, time);
                 messages.add(message);
             }
         }
@@ -189,7 +192,7 @@ public class DatabaseJSON {
      * @param orderJSON    JSONArray type, shows the order how the data should be shown
      * @throws Exception
      */
-    public void addSentMessage(long userId, long receiverId, String message, JSONObject databaseJSON, JSONArray usersJSON, JSONArray orderJSON) throws Exception {
+     void addSentMessage(long userId, long receiverId, String message, String time, JSONObject databaseJSON, JSONArray usersJSON, JSONArray orderJSON) throws Exception {
 
         JSONArray userSentMessages = (JSONArray) (this.getUser(userId, usersJSON).get("sent_messages"));
 
@@ -197,6 +200,7 @@ public class DatabaseJSON {
         JSONObject messageData = new JSONObject();
         messageData.put("receiver", receiverId);
         messageData.put("message", message);
+        messageData.put("time", time);
         userSentMessages.add(messageData);
 
         databaseJSON.put("client", usersJSON);
@@ -213,20 +217,23 @@ public class DatabaseJSON {
      * @param senderId Id of the user who sent the message
      * @param message String type message
      * @param databaseJSON JSONObject type HashMap that shows the whole database
-     * @param usersJSON    JSONArray type, has all of the users in it
-     * @param orderJSON    JSONArray type, shows the order how the data should be shown
+     * @param usersJSON JSONArray type, has all of the users in it
+     * @param orderJSON JSONArray type, shows the order how the data should be shown
      * @throws Exception
      */
-    public void addReceivedMessage(long chatId, long senderId, String message, JSONObject databaseJSON, JSONArray usersJSON, JSONArray orderJSON, JSONArray chatsJSON) throws Exception {
+    public void addReceivedMessage(long chatId, long senderId, String message, String time, JSONObject databaseJSON, JSONArray usersJSON, JSONArray orderJSON, JSONArray chatsJSON) throws Exception {
         JSONArray users = chatParticipants(chatId, chatsJSON);
-        for (Object id: users) {
+        for (Object id : users) {
             long userid = Long.parseLong(id.toString());
-            JSONArray userSentMessages = (JSONArray) (this.getUser(userid, usersJSON).get("received_messages"));
-            JSONObject messageData = new JSONObject();
-            messageData.put("sender", senderId);
-            messageData.put("message", message);
-            messageData.put("chat-id", chatId);
-            userSentMessages.add(messageData);
+            if (userid != senderId) {
+                JSONArray userSentMessages = (JSONArray) (this.getUser(userid, usersJSON).get("received_messages"));
+                JSONObject messageData = new JSONObject();
+                messageData.put("sender", senderId);
+                messageData.put("message", message);
+                messageData.put("chat-id", chatId);
+                messageData.put("time", time);
+                userSentMessages.add(messageData);
+            }
         }
 
         databaseJSON.put("client", usersJSON);
@@ -240,24 +247,17 @@ public class DatabaseJSON {
 
     }
 
-    /**
-     *
-     * @param chatId
-     * @param chatsJson
-     * @return array of users in the given chat
-     */
-    public JSONArray chatParticipants(long chatId, JSONArray chatsJson){
+    public JSONArray chatParticipants(long chatId, JSONArray chatsJson) {
         // Looping the chats array to get the array of users
         JSONArray users = new JSONArray();
         for (int i = 0; i < chatsJson.size(); i++) {
             JSONObject data = (JSONObject) chatsJson.get(i);
             long id = (long) data.get("id");
-            if(id == chatId){
+            if (id == chatId) {
                 users = (JSONArray) data.get("users");
             }
         }
         return users;
-
     }
 
     public void newChat(long participant1, long participant2, JSONObject databaseJSON, JSONArray chatsJson) throws Exception {
@@ -280,7 +280,7 @@ public class DatabaseJSON {
         for (int i = 0; i < chatsJson.size(); i++) {
             JSONObject data = (JSONObject) chatsJson.get(i);
             long id = (long) data.get("id");
-            if(id == chatid){
+            if (id == chatid) {
                 chatsJson.remove(data);
                 users = (JSONArray) data.get("users");
                 users.add(participant);
@@ -299,7 +299,7 @@ public class DatabaseJSON {
         for (int i = 0; i < chatsJson.size(); i++) {
             JSONObject data = (JSONObject) chatsJson.get(i);
             long id = (long) data.get("id");
-            if (id == chatid){
+            if (id == chatid) {
                 chatsJson.remove(data);
                 users = (JSONArray) data.get("users");
                 for (int j = 0; j < users.size(); j++) {
@@ -325,7 +325,7 @@ public class DatabaseJSON {
         for (int i = 0; i < chatsJson.size(); i++) {
             JSONObject data = (JSONObject) chatsJson.get(i);
             long id = (long) data.get("id");
-            if(id == chatid){
+            if (id == chatid) {
                 JSONArray users = (JSONArray) data.get("users");
                 for (int j = 0; j < users.size(); j++) {
                     System.out.println((long) users.get(j));
@@ -339,7 +339,6 @@ public class DatabaseJSON {
             file.write(databaseJson.toJSONString());
         }
     }
-
 
     public void addUser(String username, JSONObject databaseJson, JSONArray usersJson) throws Exception {
         long biggestid = biggestId(usersJson);
@@ -359,7 +358,7 @@ public class DatabaseJSON {
         for (int i = 0; i < usersJson.size(); i++) {
             JSONObject data = (JSONObject) usersJson.get(i);
             long id = (long) data.get("id");
-            if(id == userid){
+            if (id == userid) {
                 usersJson.remove(data);
             }
         }
