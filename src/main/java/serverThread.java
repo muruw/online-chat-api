@@ -4,6 +4,8 @@ import org.json.simple.JSONObject;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
+import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 
 public class serverThread implements Runnable {
@@ -30,6 +32,7 @@ public class serverThread implements Runnable {
         List<Message> messagesBetweentheIDs = this.database.userConvoSent(senderID, receiverID, this.usersJSON);
         List<Message> recieved = this.database.userConvoRecieved(senderID, receiverID, this.usersJSON);
         messagesBetweentheIDs.addAll(recieved);
+        Collections.sort(messagesBetweentheIDs);
         //messaged võiks uusimast vanimani sortitud ka olla (võiks olla messagel ka kas sent v saadud küljes olla)
         socketOut.writeInt(messagesBetweentheIDs.size());
         for (Message message : messagesBetweentheIDs) {
@@ -50,8 +53,9 @@ public class serverThread implements Runnable {
             System.out.println(type);
             if (type == 1) {
                 String text = socketIn.readUTF();
-                database.addSentMessage(firstid, secondid, text, databaseObject,usersJSON,orderJSON); //saatja id ja chati kuhu saadab id
-                database.addReceivedMessage(secondid, firstid, text, databaseObject,usersJSON,orderJSON,chatsJSON); //chati id ja see kes sinna saadab id
+                String time = Instant.now().toString();
+                database.addSentMessage(firstid, secondid, text, time, databaseObject,usersJSON,orderJSON); //saatja id ja chati kuhu saadab id
+                database.addReceivedMessage(secondid, firstid, text, time, databaseObject,usersJSON,orderJSON,chatsJSON); //chati id ja see kes sinna saadab id
                 writeMessage(socketOut, firstid, secondid);
                 System.out.println("saadetud sõnumid tagasi");
             } else if (type == 0) {
