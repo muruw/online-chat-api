@@ -19,6 +19,7 @@ public class DatabaseJSON {
 
     /**
      * Creates and returns a database object
+     *
      * @return JSONObject, database object
      * @throws Exception
      */
@@ -32,8 +33,7 @@ public class DatabaseJSON {
     }
 
     /**
-     *
-     * @param jsonObj Database object
+     * @param jsonObj   Database object
      * @param jsonTable name of the column
      * @return
      */
@@ -78,8 +78,7 @@ public class DatabaseJSON {
     }
 
     /**
-     *
-     * @param userId Id of the user, whose sent messages the application shows
+     * @param userId    Id of the user, whose sent messages the application shows
      * @param arrayJSON Arrays of users
      * @return List of messages sent by the specific user
      */
@@ -99,7 +98,7 @@ public class DatabaseJSON {
             long chatid = (long) data.get("receiver");
 
 
-            Message message = new Message(chatid, userId,userMessage);
+            Message message = new Message(chatid, userId, userMessage);
             messages.add(message);
         }
 
@@ -107,8 +106,7 @@ public class DatabaseJSON {
     }
 
     /**
-     *
-     * @param userId Id of the user, whose received messages the application shows
+     * @param userId    Id of the user, whose received messages the application shows
      * @param arrayJSON Arrays of users
      * @return List of messages sent by the specific user
      */
@@ -136,7 +134,7 @@ public class DatabaseJSON {
     }
 
     //gets all the sent messages of a person in a specific private chat/convo
-    public List<Message> userConvoSent(long userId,long recieverId, JSONArray arrayJSON) {
+    public List<Message> userConvoSent(long userId, long recieverId, JSONArray arrayJSON) {
         List<Message> messages = new ArrayList<>();
 
         // Object that holds the user data
@@ -158,7 +156,7 @@ public class DatabaseJSON {
     }
 
     //gets all the received messages of a person in a specific private chat/convo
-    public List<Message> userConvoRecieved(long userId ,long chatid, JSONArray arrayJSON) {
+    public List<Message> userConvoRecieved(long userId, long chatid, JSONArray arrayJSON) {
         List<Message> messages = new ArrayList<>();
 
         // Object that holds the user data
@@ -180,18 +178,15 @@ public class DatabaseJSON {
         return messages;
     }
 
-
-
-
-
     /**
      * Adds a message to the JSON database sent by user
-     * @param userId Id of the user, whose sent the message
-     * @param receiverId Id of the user to whom the message is sent to
-     * @param message String type message
+     *
+     * @param userId       Id of the user, whose sent the message
+     * @param receiverId   Id of the user to whom the message is sent to
+     * @param message      String type message
      * @param databaseJSON JSONObject type HashMap that shows the whole database
-     * @param usersJSON JSONArray type, has all of the users in it
-     * @param orderJSON JSONArray type, shows the order how the data should be shown
+     * @param usersJSON    JSONArray type, has all of the users in it
+     * @param orderJSON    JSONArray type, shows the order how the data should be shown
      * @throws Exception
      */
     public void addSentMessage(long userId, long receiverId, String message, JSONObject databaseJSON, JSONArray usersJSON, JSONArray orderJSON) throws Exception {
@@ -218,22 +213,20 @@ public class DatabaseJSON {
      * @param senderId Id of the user who sent the message
      * @param message String type message
      * @param databaseJSON JSONObject type HashMap that shows the whole database
-     * @param usersJSON JSONArray type, has all of the users in it
-     * @param orderJSON JSONArray type, shows the order how the data should be shown
+     * @param usersJSON    JSONArray type, has all of the users in it
+     * @param orderJSON    JSONArray type, shows the order how the data should be shown
      * @throws Exception
      */
     public void addReceivedMessage(long chatId, long senderId, String message, JSONObject databaseJSON, JSONArray usersJSON, JSONArray orderJSON, JSONArray chatsJSON) throws Exception {
         JSONArray users = chatParticipants(chatId, chatsJSON);
         for (Object id: users) {
             long userid = Long.parseLong(id.toString());
-            if (userid != senderId) {
-                JSONArray userSentMessages = (JSONArray) (this.getUser(userid, usersJSON).get("received_messages"));
-                JSONObject messageData = new JSONObject();
-                messageData.put("sender", senderId);
-                messageData.put("message", message);
-                messageData.put("chat-id", chatId);
-                userSentMessages.add(messageData);
-            }
+            JSONArray userSentMessages = (JSONArray) (this.getUser(userid, usersJSON).get("received_messages"));
+            JSONObject messageData = new JSONObject();
+            messageData.put("sender", senderId);
+            messageData.put("message", message);
+            messageData.put("chat-id", chatId);
+            userSentMessages.add(messageData);
         }
 
         databaseJSON.put("client", usersJSON);
@@ -244,6 +237,26 @@ public class DatabaseJSON {
         try (FileWriter file = new FileWriter("client_db.json")) {
             file.write(databaseJSON.toJSONString());
         }
+
+    }
+
+    /**
+     *
+     * @param chatId
+     * @param chatsJson
+     * @return array of users in the given chat
+     */
+    public JSONArray chatParticipants(long chatId, JSONArray chatsJson){
+        // Looping the chats array to get the array of users
+        JSONArray users = new JSONArray();
+        for (int i = 0; i < chatsJson.size(); i++) {
+            JSONObject data = (JSONObject) chatsJson.get(i);
+            long id = (long) data.get("id");
+            if(id == chatId){
+                users = (JSONArray) data.get("users");
+            }
+        }
+        return users;
 
     }
 
@@ -345,6 +358,7 @@ public class DatabaseJSON {
             file.write(databaseJson.toJSONString());
         }
     }
+
 
     public void addUser(String username, JSONObject databaseJson, JSONArray usersJson) throws Exception {
         long biggestid = biggestId(usersJson);
