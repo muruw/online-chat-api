@@ -10,10 +10,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -113,6 +110,10 @@ public class ClientGUI extends Application {
         //
         BorderPane border1 = new BorderPane();
 
+        Label welcomeLabel = new Label("Welcome to our online-chat");
+        welcomeLabel.setMinSize(100,100);
+
+
         TextField username = new TextField("username");
         username.setMaxSize(100,100);
         TextField password = new TextField("password");
@@ -122,12 +123,17 @@ public class ClientGUI extends Application {
         login.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent actionEvent) {
-                peaLava.setScene(tseen1);
+                if(checkLogin()) {
+                    peaLava.setScene(tseen1);
+                }
             }
         });
+
+
         VBox loginDetails = new VBox();
-        loginDetails.getChildren().addAll(username,password,login);
+        loginDetails.getChildren().addAll(welcomeLabel, username,password,login);
         loginDetails.setAlignment(Pos.CENTER);
+
         border1.setCenter(loginDetails);
         Scene tseen2 = new Scene(border1, 700, 400, Color.SNOW);
 
@@ -167,5 +173,10 @@ public class ClientGUI extends Application {
             }
         }
         return textToDisplay.toString();
+    }
+
+    // TODO: 4/21/19 Make server check user info
+    public boolean checkLogin(){
+        return true;
     }
 }

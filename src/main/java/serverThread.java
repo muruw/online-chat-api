@@ -50,8 +50,8 @@ public class serverThread implements Runnable {
             System.out.println(type);
             if (type == 1) {
                 String text = socketIn.readUTF();
-                database.addSentMessage(firstid, secondid, text, databaseObject,usersJSON,orderJSON); //saatja id ja chati kuhu saadab id
-                database.addReceivedMessage(secondid, firstid, text, databaseObject,usersJSON,orderJSON,chatsJSON); //chati id ja see kes sinna saadab id
+                database.addSentMessage(firstid, secondid, text, databaseObject, usersJSON, orderJSON); //saatja id ja chati kuhu saadab id
+                database.addReceivedMessage(secondid, firstid, text, databaseObject, usersJSON, orderJSON, chatsJSON); //chati id ja see kes sinna saadab id
                 writeMessage(socketOut, firstid, secondid);
                 System.out.println("saadetud sõnumid tagasi");
             } else if (type == 0) {
@@ -63,7 +63,7 @@ public class serverThread implements Runnable {
             } else if (type == 4) {
                 database.deleteChat(firstid, databaseObject, usersJSON, chatsJSON); //chati id mida kustutame
             } else if (type == 5) {
-                database.removeFromChat(firstid, secondid, databaseObject, usersJSON,chatsJSON); //chati id ja inimese id keda eemaldame chatist
+                database.removeFromChat(firstid, secondid, databaseObject, usersJSON, chatsJSON); //chati id ja inimese id keda eemaldame chatist
             } else if (type == 6) {
                 String username = socketIn.readUTF();
                 database.addUser(username, databaseObject, usersJSON);
