@@ -4,13 +4,13 @@ public class Message implements Comparable {
     private long chatid;
     private long senderid;
     private String message;
-    private String time;
+    private Instant time;
 
     public Message(long chatid, long senderid, String message, String time){
         this.chatid = chatid;
         this.senderid = senderid;
         this.message = message;
-        this.time = time;
+        this.time = Instant.parse(time);
     }
 
     public long getChatid() {
@@ -25,12 +25,12 @@ public class Message implements Comparable {
         return message;
     }
 
-    public String getTime() {
+    public Instant getTime() {
         return time;
     }
 
     @Override
     public int compareTo(Object o) {
-        return Instant.parse(this.getTime()).compareTo(Instant.parse(((Message) o).getTime()));
+        return this.getTime().compareTo(((Message) o).getTime());
     }
 }
