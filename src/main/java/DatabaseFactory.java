@@ -1,12 +1,15 @@
 
 
-import org.h2.tools.RunScript;
+import de.mkammerer.argon2.Argon2;
+import de.mkammerer.argon2.Argon2Factory;
 
+import javax.xml.crypto.Data;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+
 
 /*
                                        _
@@ -26,6 +29,8 @@ ___________[_]_[_]_[_]______________/_]_[_\___________________________________
 */
 
 public class DatabaseFactory {
+
+    private final Argon2 argon2 = Argon2Factory.create();
 
     /**
      * @return connection to the database
@@ -74,7 +79,7 @@ public class DatabaseFactory {
         PreparedStatement ps = connection.prepareStatement("INSERT INTO Users(username, password) VALUES(?, ?);");
 
         ps.setString(1, username);
-        ps.setString(2, password1);
+        ps.setString(2, hashPassword(password1));
         ps.executeUpdate();
         return true;
     }
@@ -85,7 +90,9 @@ public class DatabaseFactory {
             while (rs.next()) {
                 String rs_username = rs.getString("username");
                 String rs_password = rs.getString("password");
-                if (rs_username.equals(username) && rs_password.equals(password)) {
+                String hash = hashPassword(rs_password);
+                if (rs_username.equals(username) && argon2.verify(hash, rs_password)) {
+                    System.out.println(rs_username + "; " + rs_password);
                     return true;
                 }
             }
@@ -105,5 +112,10 @@ public class DatabaseFactory {
             }
         }
         return id;
+    }
+
+    private String hashPassword(String password){
+        String passwordHash = argon2.hash(30, 65536, 1, password.toCharArray());
+        return passwordHash;
     }
 }
