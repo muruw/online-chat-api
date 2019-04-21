@@ -1,9 +1,12 @@
+import org.h2.tools.RunScript;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.Reader;
 import java.net.Socket;
+import java.sql.Connection;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
@@ -41,7 +44,6 @@ public class serverThread implements Runnable {
         }
     }
 
-
     public void run() {
         Socket socket = this.socket;
         try (socket;
@@ -73,6 +75,31 @@ public class serverThread implements Runnable {
                 database.addUser(username, databaseObject, usersJSON);
             } else if (type == 7) {
                 database.deleteUser(firstid, databaseObject, usersJSON);
+            } else if (type == 8 || type == 9) {
+                DatabaseFactory factory = new DatabaseFactory();
+                try (Connection connection = factory.connectToDatabase()) {
+                    try (Reader setupDatabase = factory.createDatabase("setup.sql")) {
+                        RunScript.execute(connection, setupDatabase);
+                    }
+                    String un = socketIn.readUTF();
+                    String pw = socketIn.readUTF();
+                    if (type == 8) {
+                        boolean success = factory.login(connection, un, pw);
+                        if (success) {
+                            socketOut.writeLong(factory.getUserId(connection, un));
+                        } else {
+                            socketOut.writeLong(-1);
+                        }
+                    }
+                    if (type == 9) {
+                        boolean success = factory.register(connection, un, pw, pw);
+                        if (success) {
+                            socketOut.writeLong(factory.getUserId(connection, un));
+                        } else {
+                            socketOut.writeLong(-1);
+                        }
+                    }
+                }
             } else {
                 throw new IllegalArgumentException("type " + type + " pole sobiv");
             }

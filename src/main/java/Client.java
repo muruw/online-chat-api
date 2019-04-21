@@ -37,10 +37,23 @@ public class Client {
                 outData.writeLong(Long.parseLong(args[1]));
                 outData.writeUTF(args[2]);
             } else if (args[0].equals("deluser")) {
-                outData.writeInt(6);
+                outData.writeInt(7);
                 outData.writeLong(Long.parseLong(args[1]));
                 outData.writeLong(Long.parseLong(args[2]));
-            } else if (args.length == 2) {
+            } else if (args[0].equals("login") || args[0].equals("reg")) {
+                if (args[0].equals("login")) {
+                    outData.writeInt(8);
+                }
+                else {
+                    outData.writeInt(9);
+                }
+                outData.writeLong(0);
+                outData.writeLong(0);
+                outData.writeUTF(args[1]);
+                outData.writeUTF(args[2]);
+                System.out.println(inData.readLong());
+            }
+            else if (args.length == 2) {
                 writeMessage(outData, Long.parseLong(args[0]), Long.parseLong(args[1]), "");
                 readMessage(inData);
             } else if (args.length >= 3) {
