@@ -67,7 +67,7 @@ public class DatabaseFactory {
             return false;
         }
         // Checking whether an username exists already
-        if(getUsernames(connection).contains(username)){
+        if (getUsernames(connection).contains(username)) {
             return false;
         }
 
@@ -93,4 +93,17 @@ public class DatabaseFactory {
         return false;
     }
 
+    public long getUserId(Connection connection, String username) throws SQLException {
+        PreparedStatement ps = connection.prepareStatement("SELECT id FROM Users WHERE username = ?;");
+        ps.setString(1, username);
+
+        long id = -1;
+
+        try (ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                id = rs.getInt("id");
+            }
+        }
+        return id;
+    }
 }

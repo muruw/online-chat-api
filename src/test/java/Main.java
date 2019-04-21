@@ -26,21 +26,22 @@ public class Main {
                 String userChoice = input.next().toUpperCase();
                 if (userChoice.equals("L")) {
                     while (true) {
-                        System.out.println("write ur username: ");
-                        String username = input.next();
+                        System.out.println("write ur loginUsername: ");
+                        String loginUsername = input.next();
                         System.out.println("write ur password: ");
                         String password = input.next();
-                        if (factory.login(connection, username, password)) {
+                        if (factory.login(connection, loginUsername, password)) {
                             System.out.println("Logged in");
+                            System.out.println("Id of that user: " + factory.getUserId(connection, loginUsername));
                             break;
                         } else {
-                            System.out.println("username or password incorrect");
+                            System.out.println("loginUsername or password incorrect");
                         }
                     }
                 } else if (userChoice.equals("R")) {
                     while (true) {
-                        System.out.println("Choose an username");
-                        String username = input.next();
+                        System.out.println("Choose an regUsername");
+                        String regUsername = input.next();
 
                         System.out.println("Choose an password");
                         String password1 = input.next();
@@ -48,14 +49,14 @@ public class Main {
                         System.out.println("confirm your password");
                         String password2 = input.next();
 
-                        if (factory.register(connection, username, password1, password2)) {
+                        if (factory.register(connection, regUsername, password1, password2)) {
                             System.out.println("Account created");
+                            System.out.println("Id of that user: " + factory.getUserId(connection, regUsername));
                             break;
                         } else {
                             System.out.println("Try again!");
                         }
                     }
-
                 }
             }
         }
