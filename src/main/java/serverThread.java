@@ -70,9 +70,6 @@ public class serverThread implements Runnable {
                 database.deleteChat(firstid, databaseObject, usersJSON, chatsJSON); //chati id mida kustutame
             } else if (type == 5) {
                 database.removeFromChat(firstid, secondid, databaseObject, usersJSON, chatsJSON); //chati id ja inimese id keda eemaldame chatist
-            } else if (type == 6) {
-                String username = socketIn.readUTF();
-                database.addUser(username, databaseObject, usersJSON);
             } else if (type == 7) {
                 database.deleteUser(firstid, databaseObject, usersJSON);
             } else if (type == 8 || type == 9) {
@@ -94,7 +91,9 @@ public class serverThread implements Runnable {
                     if (type == 9) {
                         boolean success = factory.register(connection, un, pw, pw);
                         if (success) {
-                            socketOut.writeLong(factory.getUserId(connection, un));
+                            long id = factory.getUserId(connection, un);
+                            database.addUser(un, id, databaseObject, usersJSON);
+                            socketOut.writeLong(id);
                         } else {
                             socketOut.writeLong(-1);
                         }

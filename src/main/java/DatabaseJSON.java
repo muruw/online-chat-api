@@ -340,10 +340,9 @@ public class DatabaseJSON {
         }
     }
 
-    public void addUser(String username, JSONObject databaseJson, JSONArray usersJson) throws Exception {
-        long biggestid = biggestId(usersJson);
+    public void addUser(String username, long id, JSONObject databaseJson, JSONArray usersJson) throws Exception {
         JSONObject user = new JSONObject();
-        user.put("id", biggestid + 1);
+        user.put("id", id);
         user.put("sent_messages", new JSONArray());
         user.put("received_messages", new JSONArray());
         user.put("client_name", username);
