@@ -49,7 +49,7 @@ public class DatabaseJSON {
      * @param arrayJSON JSONArray of users
      * @return List of users currently in the database
      */
-    public List<User> getUsers(JSONArray arrayJSON) {
+   public List<User> getUsers(JSONArray arrayJSON) {
         List<User> users = new ArrayList<>();
         for (int i = 0; i < arrayJSON.size(); i++) {
             JSONObject obj = (JSONObject) arrayJSON.get(i);
@@ -258,25 +258,6 @@ public class DatabaseJSON {
         }
         return users;
 
-    }
-
-    /**
-     *
-     * @param chatId
-     * @param chatsJson
-     * @return array of users in the given chat
-     */
-    public JSONArray chatParticipants(long chatId, JSONArray chatsJson){
-        // Looping the chats array to get the array of users
-        JSONArray users = new JSONArray();
-        for (int i = 0; i < chatsJson.size(); i++) {
-            JSONObject data = (JSONObject) chatsJson.get(i);
-            long id = (long) data.get("id");
-            if(id == chatId){
-                users = (JSONArray) data.get("users");
-            }
-        }
-        return users;
     }
 
     public void newChat(long participant1, long participant2, JSONObject databaseJSON, JSONArray chatsJson) throws Exception {
