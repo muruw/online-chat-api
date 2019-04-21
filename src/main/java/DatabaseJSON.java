@@ -261,7 +261,7 @@ public class DatabaseJSON {
         return users;
     }
 
-    public void newChat(long participant1, long participant2, JSONObject databaseJSON, JSONArray chatsJson) throws Exception {
+    public long newChat(long participant1, long participant2, JSONObject databaseJSON, JSONArray chatsJson) throws Exception {
         long biggestId = biggestId(chatsJson);
         JSONObject chat = new JSONObject();
         JSONArray participants = new JSONArray();
@@ -274,6 +274,7 @@ public class DatabaseJSON {
         try (FileWriter file = new FileWriter("client_db.json")) {
             file.write(databaseJSON.toJSONString());
         }
+        return biggestId + 1;
     }
 
     public void addToChat(long chatid, long participant, JSONObject databaseJson, JSONArray chatsJson) throws Exception {

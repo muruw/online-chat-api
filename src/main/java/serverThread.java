@@ -63,7 +63,8 @@ public class serverThread implements Runnable {
             } else if (type == 0) {
                 writeMessage(socketOut, firstid, secondid);
             } else if (type == 2) {
-                database.newChat(firstid, secondid, databaseObject, chatsJSON); // mõlema inimese id-d
+                long thischatid = database.newChat(firstid, secondid, databaseObject, chatsJSON); // mõlema inimese id-d
+                socketOut.writeLong(thischatid);
             } else if (type == 3) {
                 database.addToChat(firstid, secondid, databaseObject, chatsJSON); // chatiid ja lisatava id
             } else if (type == 4) {
