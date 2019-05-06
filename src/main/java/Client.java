@@ -1,3 +1,4 @@
+import javax.xml.crypto.Data;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -31,7 +32,7 @@ public class Client {
                 outData.writeInt(5);
                 outData.writeLong(Long.parseLong(args[1]));
                 outData.writeLong(Long.parseLong(args[2]));
-            } else if (args[0].equals("user")) {
+            } else if (args[0].equals("chats")) {
                 outData.writeInt(6);
                 outData.writeLong(Long.parseLong(args[1]));
                 outData.writeLong(Long.parseLong(args[1]));
@@ -76,6 +77,13 @@ public class Client {
         socketOut.writeLong(receiver);
         if (!text.equals("")) {
             socketOut.writeUTF(text);
+        }
+    }
+
+    static void readChats(DataInputStream socketIn) throws Exception {
+        int chatCount = socketIn.readInt();
+        for (int i = 0; i < chatCount; i++) {
+            System.out.println("chat: " + socketIn.readLong());
         }
     }
 
