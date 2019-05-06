@@ -1,9 +1,6 @@
-
-
-import org.h2.tools.RunScript;
+package client;
 
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;

@@ -1,10 +1,8 @@
+import client.DatabaseFactory;
 import org.h2.tools.RunScript;
 
 import java.io.Reader;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Scanner;
 
 public class Main {

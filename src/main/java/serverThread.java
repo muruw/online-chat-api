@@ -1,3 +1,4 @@
+import client.DatabaseFactory;
 import org.h2.tools.RunScript;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -52,7 +53,9 @@ public class serverThread implements Runnable {
             long chatId = socketIn.readLong();
             System.out.println(type);
             if (type == 1) {
+
                 String text = socketIn.readUTF();
+                System.out.println(text);
                 String time = Instant.now().toString();
                 database.addMessage(chatId, senderId, text, time, databaseObject, chatsJSON, orderJSON); //saatja id ja chati kuhu saadab id
                 writeMessage(socketOut, chatId);
@@ -61,6 +64,7 @@ public class serverThread implements Runnable {
                 writeMessage(socketOut, chatId);
             } else if (type == 2) {
                 long thischatid = database.newChat(senderId, chatId, databaseObject, chatsJSON, usersJSON); // mõlema inimese id-d
+                System.out.println("serverHere");
                 socketOut.writeLong(thischatid);
             } else if (type == 3) {
                 database.addToChat(chatId, senderId, databaseObject, usersJSON, chatsJSON); // chatiid ja lisatava id
@@ -86,6 +90,7 @@ public class serverThread implements Runnable {
                     String pw = socketIn.readUTF();
                     if (type == 8) {
                         boolean success = factory.login(connection, un, pw);
+
                         if (success) {
                             socketOut.writeLong(factory.getUserId(connection, un));
                         } else {
@@ -98,6 +103,7 @@ public class serverThread implements Runnable {
                             long id = factory.getUserId(connection, un);
                             database.addUser(un, id, databaseObject, usersJSON);
                             socketOut.writeLong(id);
+                            System.out.println("database add was success");
                         } else {
                             socketOut.writeLong(-1);
                         }
