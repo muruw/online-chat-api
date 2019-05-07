@@ -24,41 +24,18 @@ import java.util.ArrayList;
 public class ClientMain {
     //miks static siin on hea halb? Ei ole enam private?
     private static boolean running = false;
-    private static UserData user;
-
-    //Threade peaks vist kasutama, et pingi checkimine toimuks kuskil mujal, Hetkel sleepib kogu clienti xd
-// TODO: 4/13/19 make a new thread or solve ping problem some other way.
-
-    public static void setUser() {
-        ClientMain.user = new UserData(1, 1337, "");
-    }
 
     public static void main(String[] args) throws Exception {
-        ArrayList<String> names = new ArrayList<>();
-        names.add("test");
-        names.add("Krister");
-
-
-        ClientGUI clientGUI = new ClientGUI();
-        clientGUI.addUserNames("test");
-        clientGUI.launcher(args);
+        ClientGUI.main(args);
 
 
     }
 
     public static void checkRun() throws Exception {
-        if (IO.ping()) {
-            running = true;
-        } else {
-            running = false;
-        }
+        running = IO.ping();
     }
 
     public static boolean isRunning() {
         return running;
-    }
-
-    public static void SendMessage(String message, long receiver) throws Exception {
-        IO.sendMessage(1,message, user.getUserID(), receiver);
     }
 }

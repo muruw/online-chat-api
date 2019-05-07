@@ -21,11 +21,4 @@ public class UserData {
         return userID;
     }
 
-    public void writeUserData() throws FileNotFoundException, UnsupportedEncodingException {
-        PrintWriter writer = new PrintWriter("userDATA.txt", "Utf-8");
-        writer.println(this.userID);
-        writer.close();
-    }
-
-
 }

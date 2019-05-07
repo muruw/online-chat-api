@@ -17,6 +17,10 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.InputStream;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +28,9 @@ import java.util.Optional;
 public class ClientGUI extends Application {
     private long mainUser;
     private List<String> options;
+    private Socket mainSocket;
+    private DataOutputStream mainOutStream;
+    private DataInputStream mainInStream;
 
     public ClientGUI() {
         this.options = new ArrayList<>();
@@ -35,7 +42,12 @@ public class ClientGUI extends Application {
 
     @Override
     public void start(Stage peaLava) throws Exception {
-
+        try{mainSocket = new Socket("localhost", 1337);
+            mainOutStream = new DataOutputStream(mainSocket.getOutputStream());
+            mainInStream= new DataInputStream(mainSocket.getInputStream());
+        }catch (Exception e){
+            throw new RuntimeException(e);
+        }
 
         ObservableList<String> users = FXCollections.observableArrayList();
         System.out.println(this.options);
@@ -43,7 +55,7 @@ public class ClientGUI extends Application {
         BorderPane border = new BorderPane();
         HBox navigationBar = new HBox();
 
-        //ChatBox
+        //ChatBoxmis
         TextArea chat = new TextArea();
         chat.setMaxSize(500, 350);
         chat.setDisable(true);
@@ -59,24 +71,21 @@ public class ClientGUI extends Application {
 
         //add and remove buttons
         Button add = new Button("Add chat");
-        add.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                TextInputDialog newChat = new TextInputDialog();
-                newChat.setTitle("Create a new chat");
-                newChat.setHeaderText("Give ID with whom to open chat");
-                Optional<String> answer = newChat.showAndWait();
+        add.setOnAction(actionEvent -> {
+            TextInputDialog newChat = new TextInputDialog();
+            newChat.setTitle("Create a new chat");
+            newChat.setHeaderText("Give ID with whom to open chat");
+            Optional<String> answer = newChat.showAndWait();
 
-                answer.ifPresent(personsID -> {
-                    try {
-                        // TODO: 4/21/19 Server should have a check that no duplicate chats 
-                        long chatId = IO.newChat(mainUser, Long.parseLong(personsID));
-                        users.add(String.valueOf(chatId));
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                });
-            }
+            answer.ifPresent(personsID -> {
+                try {
+                    // TODO: 4/21/19 Server should have a check that no duplicate chats
+                    long chatId = IO.newChat(mainUser, Long.parseLong(personsID),mainSocket);
+                    users.add(String.valueOf(chatId));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
         });
 
 
@@ -91,7 +100,7 @@ public class ClientGUI extends Application {
         sendButton.setOnAction(event -> {
             try {
                 System.out.println(mainUser);
-                List<String> messages = IO.sendMessage(1, textArea.getText(), mainUser, Long.parseLong(userNames.getSelectionModel().getSelectedItem()));
+                List<String> messages = IO.sendMessage(1, textArea.getText(), mainUser, Long.parseLong(userNames.getSelectionModel().getSelectedItem()),mainOutStream,mainInStream);
                 textArea.clear();
                 chat.setText(messageParser(messages));
             } catch (Exception e) {
@@ -137,21 +146,18 @@ public class ClientGUI extends Application {
         passwordConfirm.setMaxSize(100, 100);
 
         Button registerConfirm = new Button("Register");
-        registerConfirm.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                if (passwordConfirm.getText().equals(passwordRegister.getText())) {
-                    try {
-                        Long userId = IO.register(usernameRegister.getText(), passwordConfirm.getText());
-                        mainUser = userId;
-                        System.out.println(userId + " logged in");
-                        peaLava.setScene(tseen1);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+        registerConfirm.setOnAction(actionEvent -> {
+            if (passwordConfirm.getText().equals(passwordRegister.getText())) {
+                try {
+                    Long userId = IO.register(usernameRegister.getText(), passwordConfirm.getText(),mainSocket);
+                    mainUser = userId;
+                    System.out.println(userId + " logged in");
+                    peaLava.setScene(tseen1);
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-
             }
+
         });
 
         VBox registerDetails = new VBox();
@@ -176,28 +182,20 @@ public class ClientGUI extends Application {
         password.setMaxSize(100, 100);
 
         Button login = new Button("Login");
-        login.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                try {
-                    Long userId = IO.login(username.getText(), password.getText());
-                    mainUser = userId;
-                    if (userId != -1) {
-                        peaLava.setScene(tseen1);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
+        login.setOnAction(actionEvent -> {
+            try {
+                Long userId = IO.login(username.getText(), password.getText(),mainSocket);
+                mainUser = userId;
+                if (userId != -1) {
+                    peaLava.setScene(tseen1);
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         });
 
         Button register = new Button("Register");
-        register.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                peaLava.setScene(tseen3);
-            }
-        });
+        register.setOnAction(actionEvent -> peaLava.setScene(tseen3));
 
         VBox loginDetails = new VBox();
         HBox buttons = new HBox();
@@ -219,14 +217,10 @@ public class ClientGUI extends Application {
 
 
 
-/*
+
     public static void main(String[] args) {
         launch(args);
 
-    }*/
-
-    public void launcher(String[] args) {
-        launch(args);
     }
 
     //Someone made chats and did not inform me. Atm does not not display other users info. Will work together next week to resolve
