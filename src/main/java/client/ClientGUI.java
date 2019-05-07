@@ -3,8 +3,6 @@ package client;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
@@ -14,12 +12,10 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.InputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,7 +37,7 @@ public class ClientGUI extends Application {
     }
 
     @Override
-    public void start(Stage peaLava) throws Exception {
+    public void start(Stage peaLava) {
         try{mainSocket = new Socket("localhost", 1337);
             mainOutStream = new DataOutputStream(mainSocket.getOutputStream());
             mainInStream= new DataInputStream(mainSocket.getInputStream());
@@ -80,7 +76,7 @@ public class ClientGUI extends Application {
             answer.ifPresent(personsID -> {
                 try {
                     // TODO: 4/21/19 Server should have a check that no duplicate chats
-                    long chatId = IO.newChat(mainUser, Long.parseLong(personsID),mainSocket);
+                    long chatId = IO.newChat(mainUser, Long.parseLong(personsID), mainOutStream,mainInStream);
                     users.add(String.valueOf(chatId));
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -88,9 +84,21 @@ public class ClientGUI extends Application {
             });
         });
 
+        Button refresh = new Button("Refresh");
+        refresh.setOnAction(actionEvent -> {
+            try {
+                List<Long> ids = IO.getChat(mainOutStream, mainInStream);
+                for (Long l : ids) {
+                    users.add(String.valueOf(l));
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
 
         VBox userNamesAndButtons = new VBox();
-        userNamesAndButtons.getChildren().addAll(userNames, add);
+        userNamesAndButtons.getChildren().addAll(userNames, add, refresh);
         VBox userMessages = new VBox();
         HBox textAreaWithSend = new HBox();
         TextField textArea = new TextField();
@@ -100,7 +108,7 @@ public class ClientGUI extends Application {
         sendButton.setOnAction(event -> {
             try {
                 System.out.println(mainUser);
-                List<String> messages = IO.sendMessage(1, textArea.getText(), mainUser, Long.parseLong(userNames.getSelectionModel().getSelectedItem()),mainOutStream,mainInStream);
+                List<String> messages = IO.sendMessage(1, textArea.getText(), mainUser, Long.parseLong(userNames.getSelectionModel().getSelectedItem()), mainOutStream, mainInStream);
                 textArea.clear();
                 chat.setText(messageParser(messages));
             } catch (Exception e) {
@@ -149,7 +157,7 @@ public class ClientGUI extends Application {
         registerConfirm.setOnAction(actionEvent -> {
             if (passwordConfirm.getText().equals(passwordRegister.getText())) {
                 try {
-                    Long userId = IO.register(usernameRegister.getText(), passwordConfirm.getText(),mainSocket);
+                    Long userId = IO.register(usernameRegister.getText(), passwordConfirm.getText(), mainOutStream,mainInStream);
                     mainUser = userId;
                     System.out.println(userId + " logged in");
                     peaLava.setScene(tseen1);
@@ -157,7 +165,6 @@ public class ClientGUI extends Application {
                     e.printStackTrace();
                 }
             }
-
         });
 
         VBox registerDetails = new VBox();
@@ -184,7 +191,7 @@ public class ClientGUI extends Application {
         Button login = new Button("Login");
         login.setOnAction(actionEvent -> {
             try {
-                Long userId = IO.login(username.getText(), password.getText(),mainSocket);
+                Long userId = IO.login(username.getText(), password.getText(), mainOutStream,mainInStream);
                 mainUser = userId;
                 if (userId != -1) {
                     peaLava.setScene(tseen1);

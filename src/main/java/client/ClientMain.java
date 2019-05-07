@@ -27,8 +27,6 @@ public class ClientMain {
 
     public static void main(String[] args) throws Exception {
         ClientGUI.main(args);
-
-
     }
 
     public static void checkRun() throws Exception {
