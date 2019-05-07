@@ -142,9 +142,7 @@ public class DatabaseJSON {
         for (int i = 0; i < usersJson.size(); i++) {
             JSONObject data = (JSONObject) usersJson.get(i);
             long id = (long) data.get("id");
-            System.out.println(id);
             if (id == participant1 || id == participant2) {
-                System.out.println("matchh");
                 newUsers.remove(data);
                 JSONArray chats = (JSONArray) data.get("chatsIds");
                 chats.add(biggestId + 1);
@@ -228,21 +226,24 @@ public class DatabaseJSON {
     }
 
     public void deleteChat(long chatid, JSONObject databaseJson, JSONArray usersJson, JSONArray chatsJson) throws Exception {
+        JSONArray newusersJson = (JSONArray) usersJson.clone();
         for (int i = 0; i < chatsJson.size(); i++) {
             JSONObject data = (JSONObject) chatsJson.get(i);
             long id = (long) data.get("id");
             if (id == chatid) {
                 JSONArray users = (JSONArray) data.get("users");
                 for (int j = 0; j < users.size(); j++) { //kui proovida deleteida ss näha et for loop ei tööta
-                    System.out.println(users.size()); //kahe inimesega kustutab aint esimese ära ja ja = 0 aga
-                    System.out.println(usersJson);      // j = 1ni ei jõua kunagi
-                    usersJson = removeFromChat(chatid, (long) users.get(j), databaseJson, usersJson, chatsJson);
-                    System.out.println(usersJson);
-                    System.out.println(j);
+                    JSONObject user = getUserOrChat((long) users.get(j), usersJson);
+                    newusersJson.remove(user);
+                    JSONArray chats = (JSONArray) user.get("chatsIds");
+                    chats.remove(chatid);
+                    user.put("chatsIds", chats);
+                    newusersJson.add(user);
                 }
                 chatsJson.remove(data);
             }
         }
+        databaseJson.put("client", newusersJson);
         databaseJson.put("chats", chatsJson);
         try (FileWriter file = new FileWriter("client_db.json")) {
             file.write(databaseJson.toJSONString());

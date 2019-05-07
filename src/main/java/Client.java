@@ -36,7 +36,10 @@ public class Client {
                 outData.writeInt(6);
                 outData.writeLong(Long.parseLong(args[1]));
                 outData.writeLong(Long.parseLong(args[1]));
-                outData.writeUTF(args[2]);
+                int suurus = inData.readInt();
+                for (int i = 0; i < suurus; i++) {
+                    System.out.println(inData.readLong());
+                }
             } else if (args[0].equals("deluser")) {
                 outData.writeInt(7);
                 outData.writeLong(Long.parseLong(args[1]));
