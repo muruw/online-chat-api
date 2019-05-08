@@ -53,7 +53,6 @@ public class serverThread implements Runnable {
             long chatId = socketIn.readLong();
             System.out.println(type);
             if (type == 1) {
-
                 String text = socketIn.readUTF();
                 System.out.println(text);
                 String time = Instant.now().toString();
