@@ -75,9 +75,13 @@ public class serverThread implements Runnable {
                     database.removeFromChat(chatId, senderId, databaseObject, usersJSON, chatsJSON); //chati id ja inimese id keda eemaldame chatist
                 } else if (type == 6) {
                     String[] chats = database.getChats(senderId, usersJSON);
-                    socketOut.writeInt(chats.length);
-                    for (String chat : chats) {
-                        socketOut.writeUTF(chat);
+                    if (chats != null) {
+                        socketOut.writeInt(chats.length);
+                        for (String chat : chats) {
+                            socketOut.writeUTF(chat);
+                        }
+                    } else {
+                        socketOut.writeInt(0);
                     }
                 } else if (type == 7) {
                     database.deleteUser(senderId, databaseObject, usersJSON);
