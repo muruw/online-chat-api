@@ -29,10 +29,6 @@ public class ClientMain {
         ClientGUI.main(args);
     }
 
-    public static void checkRun() throws Exception {
-        running = IO.ping();
-    }
-
     public static boolean isRunning() {
         return running;
     }

@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class ClientGUI extends Application {
-    private long mainUser;
+    private String mainUser;
     private List<String> options;
     private Socket mainSocket;
     private DataOutputStream mainOutStream;
@@ -65,6 +65,8 @@ public class ClientGUI extends Application {
         userNames.setOrientation(Orientation.VERTICAL);
         userNames.getSelectionModel().selectedItemProperty().addListener((observableValue, s, t1) -> chat.setText(s + t1));
 
+
+
         //add and remove buttons
         Button add = new Button("Add chat");
         add.setOnAction(actionEvent -> {
@@ -76,7 +78,7 @@ public class ClientGUI extends Application {
             answer.ifPresent(personsID -> {
                 try {
                     // TODO: 4/21/19 Server should have a check that no duplicate chats
-                    long chatId = IO.newChat(mainUser, Long.parseLong(personsID), mainOutStream,mainInStream);
+                    String chatId = IO.newChat(mainUser, personsID, mainOutStream,mainInStream);
                     users.add(String.valueOf(chatId));
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -84,31 +86,23 @@ public class ClientGUI extends Application {
             });
         });
 
+
+
+
+        TextField textArea = new TextField();
+
+        //fetch data
         Button refresh = new Button("Refresh");
         refresh.setOnAction(actionEvent -> {
-            try {
-                List<Long> ids = IO.getChat(mainOutStream, mainInStream);
-                for (Long l : ids) {
-                    users.add(String.valueOf(l));
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+                              // TODO: 5/8/19 Lisada id saatmine ka edasi
+            updateChats(users);
         });
-
-
-        VBox userNamesAndButtons = new VBox();
-        userNamesAndButtons.getChildren().addAll(userNames, add, refresh);
-        VBox userMessages = new VBox();
-        HBox textAreaWithSend = new HBox();
-        TextField textArea = new TextField();
 
         //SendButton
         Button sendButton = new Button("Send");
         sendButton.setOnAction(event -> {
             try {
-                System.out.println(mainUser);
-                List<String> messages = IO.sendMessage(1, textArea.getText(), mainUser, Long.parseLong(userNames.getSelectionModel().getSelectedItem()), mainOutStream, mainInStream);
+                List<String> messages = IO.sendMessage(1, textArea.getText(), mainUser, userNames.getSelectionModel().getSelectedItem(), mainOutStream, mainInStream);
                 textArea.clear();
                 chat.setText(messageParser(messages));
             } catch (Exception e) {
@@ -116,6 +110,10 @@ public class ClientGUI extends Application {
             }
         });
 
+        VBox userNamesAndButtons = new VBox();
+        userNamesAndButtons.getChildren().addAll(userNames, add, refresh);
+        VBox userMessages = new VBox();
+        HBox textAreaWithSend = new HBox();
 
 /*
         options.addListener((ListChangeListener<String>) change -> {
@@ -158,9 +156,13 @@ public class ClientGUI extends Application {
             if (passwordConfirm.getText().equals(passwordRegister.getText())) {
                 try {
                     Long userId = IO.register(usernameRegister.getText(), passwordConfirm.getText(), mainOutStream,mainInStream);
-                    mainUser = userId;
-                    System.out.println(userId + " logged in");
-                    peaLava.setScene(tseen1);
+                    mainUser = usernameRegister.getText();
+                    if(userId != -1) {
+                        System.out.println(userId + " logged in");
+                        // TODO: 5/8/19 Lisada id saatmine ka edasi
+                        updateChats(users);
+                        peaLava.setScene(tseen1);
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -192,8 +194,10 @@ public class ClientGUI extends Application {
         login.setOnAction(actionEvent -> {
             try {
                 Long userId = IO.login(username.getText(), password.getText(), mainOutStream,mainInStream);
-                mainUser = userId;
+                mainUser = username.getText();
                 if (userId != -1) {
+                    // TODO: 5/8/19 Lisada id saatmine ka edasi
+                    updateChats(users);
                     peaLava.setScene(tseen1);
                 }
             } catch (Exception e) {
@@ -222,12 +226,25 @@ public class ClientGUI extends Application {
 
     }
 
+    private void updateChats(ObservableList<String> users) {
+        List<Long> userIDS = null;
+        try {
+            userIDS = IO.getChat(mainUser,mainOutStream,mainInStream);
 
+            for(Long id : userIDS){
+                System.out.println(id);
+                if(!users.contains(String.valueOf(id))) {
+                    users.add(String.valueOf(id));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
 
     public static void main(String[] args) {
         launch(args);
-
     }
 
     //Someone made chats and did not inform me. Atm does not not display other users info. Will work together next week to resolve
@@ -235,7 +252,7 @@ public class ClientGUI extends Application {
         StringBuilder textToDisplay = new StringBuilder();
         for (int i = 0; i < inputData.size(); i++) {
             if (i % 2 == 0) {
-                if (Long.parseLong(inputData.get(i)) == mainUser) {
+                if (inputData.get(i).equals(mainUser)) {
                     textToDisplay.append(inputData.get(i)).append(": ");
                 } else {
                     textToDisplay.append("                                                                               ").append(inputData.get(i)).append(": ");
