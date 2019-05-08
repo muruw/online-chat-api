@@ -51,7 +51,7 @@ public class Client {
                     outData.writeInt(9);
                 }
                 outData.writeUTF(args[1]);
-                outData.writeLong(0);
+                outData.writeUTF(" ");
                 outData.writeUTF(args[2]);
                 System.out.println(inData.readLong());
             } else if (args.length == 2) {
