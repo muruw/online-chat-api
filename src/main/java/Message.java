@@ -1,23 +1,23 @@
 import java.time.Instant;
 public class Message implements Comparable {
 
-    private long chatid;
-    private long senderid;
+    private String chatid;
+    private String senderid;
     private String message;
     private Instant time;
 
-    public Message(long chatid, long senderid, String message, String time){
+    public Message(String chatid, String senderid, String message, String time){
         this.chatid = chatid;
         this.senderid = senderid;
         this.message = message;
         this.time = Instant.parse(time);
     }
 
-    public long getChatid() {
+    public String getChatid() {
         return chatid;
     }
 
-    public long getSenderid() {
+    public String getSenderid() {
         return senderid;
     }
 

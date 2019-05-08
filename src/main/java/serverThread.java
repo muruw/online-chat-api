@@ -32,13 +32,13 @@ public class serverThread implements Runnable {
 
     // saadab hetkel tagasi mõlema id-d vastavalt kas nad olid sõnumi saatja v saaja
     // ja ss sõnumi enda ka saadab (kõikide id vaheliste sõnumitega tehakse nii)
-    void writeMessage(DataOutputStream socketOut, long chatId) throws Exception {
+    void writeMessage(DataOutputStream socketOut, String chatId) throws Exception {
         List<Message> messagesChat = this.database.chatConvo(chatId, this.chatsJSON);
         Collections.sort(messagesChat);
         //messaged võiks uusimast vanimani sortitud ka olla (võiks olla messagel ka kas sent v saadud küljes olla)
         socketOut.writeInt(messagesChat.size());
         for (Message message : messagesChat) {
-            socketOut.writeLong(message.getSenderid());
+            socketOut.writeUTF(message.getSenderid());
             socketOut.writeUTF(message.getMessage());
         }
     }
@@ -50,12 +50,11 @@ public class serverThread implements Runnable {
              DataOutputStream socketOut = new DataOutputStream(socket.getOutputStream())) {
             while (true) {
                 int type = socketIn.readInt();
-                long senderId = socketIn.readLong();
-                long chatId = socketIn.readLong();
+                String senderId = socketIn.readUTF();
+                String chatId = socketIn.readUTF();
                 System.out.println(type);
                 System.out.println("Server is running");
                 if (type == 1) {
-
                     String text = socketIn.readUTF();
                     System.out.println(text);
                     String time = Instant.now().toString();
@@ -65,9 +64,9 @@ public class serverThread implements Runnable {
                 } else if (type == 0) {
                     writeMessage(socketOut, chatId);
                 } else if (type == 2) {
-                    long thischatid = database.newChat(senderId, chatId, databaseObject, chatsJSON, usersJSON); // mõlema inimese id-d
+                    String thischatid = database.newChat(senderId, chatId, databaseObject, chatsJSON, usersJSON); // mõlema inimese id-d
                     System.out.println("serverHere");
-                    socketOut.writeLong(thischatid);
+                    socketOut.writeUTF(thischatid);
                 } else if (type == 3) {
                     database.addToChat(chatId, senderId, databaseObject, usersJSON, chatsJSON); // chatiid ja lisatava id
                 } else if (type == 4) {
@@ -75,10 +74,10 @@ public class serverThread implements Runnable {
                 } else if (type == 5) {
                     database.removeFromChat(chatId, senderId, databaseObject, usersJSON, chatsJSON); //chati id ja inimese id keda eemaldame chatist
                 } else if (type == 6) {
-                    long[] chats = database.getChats(senderId, usersJSON);
+                    String[] chats = database.getChats(senderId, usersJSON);
                     socketOut.writeInt(chats.length);
-                    for (long chat : chats) {
-                        socketOut.writeLong(chat);
+                    for (String chat : chats) {
+                        socketOut.writeUTF(chat);
                     }
                 } else if (type == 7) {
                     database.deleteUser(senderId, databaseObject, usersJSON);
@@ -88,22 +87,21 @@ public class serverThread implements Runnable {
                         try (Reader setupDatabase = factory.createDatabase("setup.sql")) {
                             RunScript.execute(connection, setupDatabase);
                         }
-                        String un = socketIn.readUTF();
                         String pw = socketIn.readUTF();
                         if (type == 8) {
-                            boolean success = factory.login(connection, un, pw);
+                            boolean success = factory.login(connection, senderId, pw);
 
                             if (success) {
-                                socketOut.writeLong(factory.getUserId(connection, un));
+                                socketOut.writeLong(factory.getUserId(connection, senderId));
                             } else {
                                 socketOut.writeLong(-1);
                             }
                         }
                         if (type == 9) {
-                            boolean success = factory.register(connection, un, pw, pw);
+                            boolean success = factory.register(connection, senderId, pw, pw);
                             if (success) {
-                                long id = factory.getUserId(connection, un);
-                                database.addUser(un, id, databaseObject, usersJSON);
+                                long id = factory.getUserId(connection, senderId);
+                                database.addUser(senderId, databaseObject, usersJSON);
                                 socketOut.writeLong(id);
                                 System.out.println("database add was success");
                             } else {
