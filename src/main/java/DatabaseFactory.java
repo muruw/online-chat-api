@@ -81,6 +81,12 @@ public class DatabaseFactory {
         ps.setString(1, username);
         ps.setString(2, passwordHash);
         ps.executeUpdate();
+
+        // every time a user has been created we send a mail to the user
+        String msg = "Thank you for registering";
+        SendMail sendMail = new SendMail("looga.krister@gmail.com", msg);
+        sendMail.sendEmail();
+
         return true;
     }
 
