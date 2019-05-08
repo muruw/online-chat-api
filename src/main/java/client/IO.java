@@ -38,6 +38,7 @@ public class IO {
         //Mingi imelik asi
         out.writeUTF("");
 
+
         int chatCount = in.readInt();
         System.out.println("chatCount " +chatCount);
         for (int i = 0; i < chatCount; i++) {
@@ -45,6 +46,12 @@ public class IO {
             test.add(line);
         }
         return test;
+    }
+
+    public static void addPerson(String chatID,String username, DataOutputStream outData) throws IOException {
+        outData.writeInt(3);
+        outData.writeUTF(chatID);
+        outData.writeUTF(username);
     }
 
     public static String newChat(String userID, String receiverID, DataOutputStream outData, DataInputStream inData) throws IOException {

@@ -72,7 +72,7 @@ public class ClientGUI extends Application {
         add.setOnAction(actionEvent -> {
             TextInputDialog newChat = new TextInputDialog();
             newChat.setTitle("Create a new chat");
-            newChat.setHeaderText("Give ID with whom to open chat");
+            newChat.setHeaderText("Give userName or chatName with what you want to connect");
             Optional<String> answer = newChat.showAndWait();
 
             answer.ifPresent(personsID -> {
@@ -80,6 +80,22 @@ public class ClientGUI extends Application {
                     // TODO: 4/21/19 Server should have a check that no duplicate chats
                     String chatId = IO.newChat(mainUser, personsID, mainOutStream,mainInStream);
                     users.add(String.valueOf(chatId));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        });
+
+        Button addPeople = new Button("Add people");
+        add.setOnAction(actionEvent -> {
+            TextInputDialog newChat = new TextInputDialog();
+            newChat.setTitle("Add a new person to chat");
+            newChat.setHeaderText("Give userName who to add");
+            Optional<String> answer = newChat.showAndWait();
+
+            answer.ifPresent(personsID -> {
+                try {
+                    IO.addPerson(userNames.getSelectionModel().getSelectedItem(),personsID,mainOutStream);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -111,7 +127,7 @@ public class ClientGUI extends Application {
         });
 
         VBox userNamesAndButtons = new VBox();
-        userNamesAndButtons.getChildren().addAll(userNames, add, refresh);
+        userNamesAndButtons.getChildren().addAll(userNames, add, refresh, addPeople);
         VBox userMessages = new VBox();
         HBox textAreaWithSend = new HBox();
 

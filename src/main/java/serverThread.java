@@ -65,7 +65,6 @@ public class serverThread implements Runnable {
                     writeMessage(socketOut, chatId);
                 } else if (type == 2) {
                     String thischatid = database.newChat(senderId, chatId, databaseObject, chatsJSON, usersJSON); // mõlema inimese id-d
-                    System.out.println("serverHere");
                     socketOut.writeUTF(thischatid);
                 } else if (type == 3) {
                     database.addToChat(chatId, senderId, databaseObject, usersJSON, chatsJSON); // chatiid ja lisatava id
