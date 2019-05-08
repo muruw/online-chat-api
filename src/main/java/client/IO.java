@@ -3,7 +3,6 @@ package client;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,7 +40,7 @@ public class IO {
 
 
         int chatCount = in.readInt();
-        System.out.println("chatCount " +chatCount);
+        System.out.println("chatCount " + chatCount);
         for (int i = 0; i < chatCount; i++) {
             Long line = in.readLong();
             test.add(line);
@@ -55,13 +54,13 @@ public class IO {
         outData.writeUTF("");
     }
 
-    public static void addPerson(String chatID,String username, DataOutputStream outData) throws IOException {
+    public static void addPerson(String chatID, String username, DataOutputStream outData) throws IOException {
         outData.writeInt(3);
         outData.writeUTF(chatID);
         outData.writeUTF(username);
     }
 
-    public static void removeFromChat(String chatID,String remove, DataOutputStream outData) throws IOException {
+    public static void removeFromChat(String chatID, String remove, DataOutputStream outData) throws IOException {
         outData.writeInt(5);
         outData.writeUTF(chatID);
         outData.writeUTF(remove);
@@ -95,7 +94,7 @@ public class IO {
 
 
         usersId = inData.readLong();
-        System.out.println(usersId +" log in code");
+        System.out.println(usersId + " log in code");
         return usersId;
     }
 

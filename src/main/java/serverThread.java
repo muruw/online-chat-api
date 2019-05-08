@@ -48,6 +48,7 @@ public class serverThread implements Runnable {
         try (socket;
              DataInputStream socketIn = new DataInputStream(socket.getInputStream());
              DataOutputStream socketOut = new DataOutputStream(socket.getOutputStream())) {
+            // TODO: 5/8/19 add a check for logout. Otherwise loop will always close while throwing an exception
             while (true) {
                 int type = socketIn.readInt();
                 String senderId = socketIn.readUTF();

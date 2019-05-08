@@ -18,18 +18,11 @@ If messageType is 0 for example payload does not exist or client is just pinging
 10.Latest JSON file is stored and displayed to user in GUI
  */
 
-import java.util.ArrayList;
-
 // TODO: 3/30/19 get saved data
 public class ClientMain {
-    //miks static siin on hea halb? Ei ole enam private?
-    private static boolean running = false;
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         ClientGUI.main(args);
     }
 
-    public static boolean isRunning() {
-        return running;
-    }
 }

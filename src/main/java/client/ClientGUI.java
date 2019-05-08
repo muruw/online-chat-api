@@ -33,10 +33,6 @@ public class ClientGUI extends Application {
         this.options = new ArrayList<>();
     }
 
-    public void addUserNames(String name) {
-        options.add(name);
-    }
-
     @Override
     public void start(Stage peaLava) {
         try{mainSocket = new Socket("localhost", 1337);
@@ -288,7 +284,7 @@ public class ClientGUI extends Application {
     }
 
     private void updateChats(ObservableList<String> users) {
-        List<Long> userIDS = null;
+        List<Long> userIDS;
         try {
             userIDS = IO.getChat(mainUser,mainOutStream,mainInStream);
 

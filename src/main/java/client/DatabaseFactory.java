@@ -4,6 +4,7 @@ import java.io.InputStreamReader;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /*
                                        _
@@ -37,7 +38,7 @@ public class DatabaseFactory {
 
     public InputStreamReader createDatabase(String name) throws Exception {
         ClassLoader classLoader = DatabaseFactory.class.getClassLoader();
-        return new InputStreamReader(classLoader.getResourceAsStream(name), "UTF-8");
+        return new InputStreamReader(Objects.requireNonNull(classLoader.getResourceAsStream(name)), "UTF-8");
     }
 
     /**

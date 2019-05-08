@@ -5,9 +5,9 @@ import org.json.simple.parser.JSONParser;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.lang.reflect.Array;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DatabaseJSON {
 
@@ -27,21 +27,18 @@ public class DatabaseJSON {
 
         JSONParser parser = new JSONParser();
         File filePath = new File(this.filePath);
-        JSONObject databaseJSONObject = (JSONObject) parser.parse(new FileReader(filePath));
 
-        return databaseJSONObject;
+        return (JSONObject) parser.parse(new FileReader(filePath));
     }
 
     /**
      * @param jsonObj   Database object
      * @param jsonTable name of the column
-     * @return
+     * @return arrayJson
      */
     public JSONArray getArrayJSON(JSONObject jsonObj, String jsonTable) {
 
-        JSONArray arrayJSON = (JSONArray) jsonObj.get(jsonTable);
-
-        return arrayJSON;
+        return (JSONArray) jsonObj.get(jsonTable);
     }
 
     /**
@@ -50,8 +47,8 @@ public class DatabaseJSON {
      */
     public List<User> getUsers(JSONArray arrayJSON) {
         List<User> users = new ArrayList<>();
-        for (int i = 0; i < arrayJSON.size(); i++) {
-            JSONObject obj = (JSONObject) arrayJSON.get(i);
+        for (Object o : arrayJSON) {
+            JSONObject obj = (JSONObject) o;
 
             // All of the JSON numbers are always in long type 
             long userId = (long) obj.get("id");
@@ -66,8 +63,12 @@ public class DatabaseJSON {
 
     //with id ja userarray gets user objekt with correct id, if not user with such id return null
     public JSONObject getChat(String neededId, JSONArray arrayJSON) {
-        for (int i = 0; i < arrayJSON.size(); i++) {
-            JSONObject obj = (JSONObject) arrayJSON.get(i);
+        return getJsonObject(neededId, arrayJSON);
+    }
+
+    private JSONObject getJsonObject(String neededId, JSONArray arrayJSON) {
+        for (Object o : arrayJSON) {
+            JSONObject obj = (JSONObject) o;
             String userId = (String) obj.get("id");
             if (userId.equals(neededId)) {
                 return obj;
@@ -77,14 +78,7 @@ public class DatabaseJSON {
     }
 
     public JSONObject getUser(String neededId, JSONArray arrayJSON) {
-        for (int i = 0; i < arrayJSON.size(); i++) {
-            JSONObject obj = (JSONObject) arrayJSON.get(i);
-            String userId = (String) obj.get("id");
-            if (userId.equals(neededId)) {
-                return obj;
-            }
-        }
-        return null;
+        return getJsonObject(neededId, arrayJSON);
     }
 
     //gets messages in a chat
@@ -96,8 +90,8 @@ public class DatabaseJSON {
 
         // Creating an array of sent_messages
         JSONArray messagesArrayJSON = (JSONArray) obj.get("messages");
-        for (int i = 0; i < messagesArrayJSON.size(); i++) {
-            JSONObject data = (JSONObject) messagesArrayJSON.get(i);
+        for (Object o : messagesArrayJSON) {
+            JSONObject data = (JSONObject) o;
             String sender = (String) data.get("sender");
             String userMessage = (String) data.get("message");
             String time = (String) data.get("time");
@@ -144,14 +138,15 @@ public class DatabaseJSON {
         chat.put("id", chatid);
         chat.put("messages", new JSONArray());
         JSONArray users = new JSONArray();
-        users.add(participant1); users.add(participant2);
+        users.add(participant1);
+        users.add(participant2);
         chat.put("users", users);
         chatsJson.add(chat);
         databaseJSON.put("chats", chatsJson);
 
         JSONArray newUsers = (JSONArray) usersJson.clone();
-        for (int i = 0; i < usersJson.size(); i++) {
-            JSONObject data = (JSONObject) usersJson.get(i);
+        for (Object o : usersJson) {
+            JSONObject data = (JSONObject) o;
             String id = (String) data.get("id");
             if (id.equals(participant1) || id.equals(participant2)) {
                 newUsers.remove(data);
@@ -195,11 +190,7 @@ public class DatabaseJSON {
                 chatsJson.add(data);
             }
         }
-        databaseJson.put("client", usersJson);
-        databaseJson.put("chats", chatsJson);
-        try (FileWriter file = new FileWriter("client_db.json")) {
-            file.write(databaseJson.toJSONString());
-        }
+        putIntoDatabase(databaseJson, chatsJson, usersJson);
     }
 
     public JSONArray removeFromChat(String chatid, String participant, JSONObject databaseJson, JSONArray usersJson, JSONArray chatsJson) throws Exception {
@@ -228,11 +219,7 @@ public class DatabaseJSON {
             }
         }
 
-        databaseJson.put("client", usersJson);
-        databaseJson.put("chats", chatsJson);
-        try (FileWriter file = new FileWriter("client_db.json")) {
-            file.write(databaseJson.toJSONString());
-        }
+        putIntoDatabase(databaseJson, chatsJson, usersJson);
         return usersJson;
     }
 
@@ -254,6 +241,10 @@ public class DatabaseJSON {
                 chatsJson.remove(data);
             }
         }
+        putIntoDatabase(databaseJson, chatsJson, newusersJson);
+    }
+
+    private void putIntoDatabase(JSONObject databaseJson, JSONArray chatsJson, JSONArray newusersJson) throws IOException {
         databaseJson.put("client", newusersJson);
         databaseJson.put("chats", chatsJson);
         try (FileWriter file = new FileWriter("client_db.json")) {
@@ -303,8 +294,8 @@ public class DatabaseJSON {
 
     public long biggestId(JSONArray usersOrChatJson) {
         long biggestId = 0;
-        for (int i = 0; i < usersOrChatJson.size(); i++) {
-            JSONObject data = (JSONObject) usersOrChatJson.get(i);
+        for (Object o : usersOrChatJson) {
+            JSONObject data = (JSONObject) o;
             long id = (long) data.get("id");
             if (id > biggestId) {
                 biggestId = id;
