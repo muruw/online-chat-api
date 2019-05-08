@@ -289,15 +289,16 @@ public class DatabaseJSON {
     public String[] getChats(String senderId, JSONArray usersJson) {
         JSONObject user = getUser(senderId, usersJson);
         JSONArray chats = (JSONArray) user.get("chatsIds");
-        int size = chats.size();
-        if (size != 0) {
+        //int size = chats.size();
+        if (chats != null) {
+            int size = chats.size();
             String[] chatIds = new String[size];
             for (int i = 0; i < chats.size(); i++) {
                 chatIds[i] = (String) chats.get(i);
             }
             return chatIds;
         }
-        return null;
+        return new String[0];
     }
 
     public long biggestId(JSONArray usersOrChatJson) {

@@ -16,6 +16,7 @@ import javafx.stage.Stage;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
@@ -53,7 +54,7 @@ public class ClientGUI extends Application {
 
         //ChatBoxmis
         TextArea chat = new TextArea();
-        chat.setMaxSize(500, 350);
+        chat.setMaxSize(550, 350);
         chat.setDisable(true);
         chat.setText("test");
 
@@ -61,7 +62,7 @@ public class ClientGUI extends Application {
         // TODO: 4/19/19  usernames from database
         //usernames
         ListView<String> userNames = new ListView<>(users);
-        userNames.setPrefSize(150, 550);
+        userNames.setPrefSize(200, 550);
         userNames.setOrientation(Orientation.VERTICAL);
         userNames.getSelectionModel().selectedItemProperty().addListener((observableValue, s, t1) -> chat.setText(s + t1));
 
@@ -69,6 +70,7 @@ public class ClientGUI extends Application {
 
         //add and remove buttons
         Button add = new Button("Add chat");
+        add.setPrefSize(100,20);
         add.setOnAction(actionEvent -> {
             TextInputDialog newChat = new TextInputDialog();
             newChat.setTitle("Create a new chat");
@@ -86,15 +88,17 @@ public class ClientGUI extends Application {
             });
         });
 
-        Button addPeople = new Button("Add people");
-        add.setOnAction(actionEvent -> {
+        Button addPeople = new Button("Add person");
+        addPeople.setPrefSize(100,20);
+        addPeople.setOnAction(actionEvent -> {
             TextInputDialog newChat = new TextInputDialog();
-            newChat.setTitle("Add a new person to chat");
-            newChat.setHeaderText("Give userName who to add");
+            newChat.setTitle("Add an user");
+            newChat.setHeaderText("Enter the users name who you wish to add");
             Optional<String> answer = newChat.showAndWait();
 
             answer.ifPresent(personsID -> {
                 try {
+                    // TODO: 4/21/19 Server should have a check that no duplicate chats
                     IO.addPerson(userNames.getSelectionModel().getSelectedItem(),personsID,mainOutStream);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -102,13 +106,49 @@ public class ClientGUI extends Application {
             });
         });
 
+        Button removePerson = new Button("Delete user");
+        removePerson.setPrefSize(100,20);
+        removePerson.setOnAction(actionEvent -> {
+            TextInputDialog newChat = new TextInputDialog();
+            newChat.setTitle("Remove person");
+            newChat.setHeaderText("Enter the username you want to remove");
+            Optional<String> answer = newChat.showAndWait();
+
+            answer.ifPresent(personsID -> {
+                try {
+                    IO.removeChat(userNames.getSelectionModel().getSelectedItem(),mainOutStream);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+        });
+
+        Button deleteChat = new Button("Delete Chat");
+        deleteChat.setPrefSize(100,20);
+        deleteChat.setOnAction(actionEvent -> {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Delete chat");
+            alert.setHeaderText("Are you sure you want to delete this chat");
+            alert.setContentText("This will delete the chat and its contents for everyone");
+
+            Optional<ButtonType> result = alert.showAndWait();
+            if (result.get() == ButtonType.OK){
+                try {
+                    IO.removeChat(userNames.getSelectionModel().getSelectedItem(),mainOutStream);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
 
 
 
         TextField textArea = new TextField();
-
+        textArea.setPrefSize(480,40);
         //fetch data
         Button refresh = new Button("Refresh");
+        refresh.setPrefSize(100,20);
         refresh.setOnAction(actionEvent -> {
                               // TODO: 5/8/19 Lisada id saatmine ka edasi
             updateChats(users);
@@ -116,6 +156,7 @@ public class ClientGUI extends Application {
 
         //SendButton
         Button sendButton = new Button("Send");
+        sendButton.setPrefSize(70,40);
         sendButton.setOnAction(event -> {
             try {
                 List<String> messages = IO.sendMessage(1, textArea.getText(), mainUser, userNames.getSelectionModel().getSelectedItem(), mainOutStream, mainInStream);
@@ -126,8 +167,12 @@ public class ClientGUI extends Application {
             }
         });
 
+        HBox addRow = new HBox();
+        HBox removeRow = new HBox();
+        removeRow.getChildren().addAll(deleteChat,removePerson);
+        addRow.getChildren().addAll(add,addPeople);
         VBox userNamesAndButtons = new VBox();
-        userNamesAndButtons.getChildren().addAll(userNames, add, refresh, addPeople);
+        userNamesAndButtons.getChildren().addAll(userNames, addRow,removeRow,refresh );
         VBox userMessages = new VBox();
         HBox textAreaWithSend = new HBox();
 
@@ -150,7 +195,7 @@ public class ClientGUI extends Application {
         border.setCenter(userMessages);
 
 
-        Scene tseen1 = new Scene(border, 700, 400, Color.SNOW);
+        Scene tseen1 = new Scene(border, 800, 400, Color.SNOW);
 
 
         //register
@@ -190,7 +235,7 @@ public class ClientGUI extends Application {
         registerDetails.setAlignment(Pos.CENTER);
 
         border2.setCenter(registerDetails);
-        Scene tseen3 = new Scene(border2, 700, 400, Color.SNOW);
+        Scene tseen3 = new Scene(border2, 800, 400, Color.SNOW);
 
 
         //
@@ -232,7 +277,7 @@ public class ClientGUI extends Application {
         loginDetails.setAlignment(Pos.CENTER);
 
         border1.setCenter(loginDetails);
-        Scene tseen2 = new Scene(border1, 700, 400, Color.SNOW);
+        Scene tseen2 = new Scene(border1, 800, 400, Color.SNOW);
 
 
         //

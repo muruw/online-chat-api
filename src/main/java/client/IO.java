@@ -3,6 +3,7 @@ package client;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,10 +49,22 @@ public class IO {
         return test;
     }
 
+    public static void removeChat(String chatID, DataOutputStream outData) throws IOException {
+        outData.writeInt(4);
+        outData.writeUTF(chatID);
+        outData.writeUTF("");
+    }
+
     public static void addPerson(String chatID,String username, DataOutputStream outData) throws IOException {
         outData.writeInt(3);
         outData.writeUTF(chatID);
         outData.writeUTF(username);
+    }
+
+    public static void removeFromChat(String chatID,String remove, DataOutputStream outData) throws IOException {
+        outData.writeInt(5);
+        outData.writeUTF(chatID);
+        outData.writeUTF(remove);
     }
 
     public static String newChat(String userID, String receiverID, DataOutputStream outData, DataInputStream inData) throws IOException {
