@@ -19,12 +19,13 @@ public class IO {
 
     private boolean runningState;
 
-    public static boolean ping() throws Exception {
+    //not needed
+    public static boolean ping() {
         try (Socket socket = new Socket("localhost", 1337);
              DataOutputStream outData = new DataOutputStream(socket.getOutputStream());
              DataInputStream inData = new DataInputStream(socket.getInputStream())) {
             System.out.println("Ping sent");
-            writeMessage(0, outData, 1, 1, "");
+            sendMessage(0, "", 1, 1, outData, inData);
             readMessage(inData);
             return true;
         } catch (Exception e) {
@@ -32,79 +33,79 @@ public class IO {
         }
     }
 
-    public static List<String> sendMessage(int messageType, String message, long userID, long chatID) throws Exception {
 
+    public static List<String> sendMessage(int messageType, String message, long userID, long chatID, DataOutputStream outData, DataInputStream inData) throws Exception {
+        System.out.println("Sending Message");
 
-        System.out.println("test");
-
-        try (Socket socket = new Socket("localhost", 1337);
-             DataOutputStream outData = new DataOutputStream(socket.getOutputStream());
-             DataInputStream inData = new DataInputStream(socket.getInputStream())) {
-            writeMessage(messageType, outData, userID, chatID, message);
+        try {
+            outData.writeInt(messageType);
+            outData.writeLong(userID);
+            outData.writeLong(chatID);
+            if (!message.equals("")) {
+                outData.writeUTF(message);
+            }
             return readMessage(inData);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
 
     }
 
-    public static long newChat(long userID, long receiverID) throws IOException {
+    public static List<Long> getChat(DataOutputStream out, DataInputStream in) throws Exception {
+        List<Long> test = new ArrayList<>();
+
+        out.writeInt(6);
+        out.writeInt(1);
+        out.writeInt(0);
+
+
+        int chatCount = in.readInt();
+        for (int i = 0; i < chatCount; i++) {
+            Long line = in.readLong();
+            System.out.println("chat: " + line);
+
+        }
+        return test;
+    }
+
+    public static long newChat(long userID, long receiverID, DataOutputStream outData, DataInputStream inData) throws IOException {
         long chatId;
 
-        try (Socket socket = new Socket("localhost", 1337);
-             DataOutputStream outData = new DataOutputStream(socket.getOutputStream());
-             DataInputStream inData = new DataInputStream(socket.getInputStream())) {
+        outData.writeInt(2);
+        outData.writeLong(userID);
+        outData.writeLong(receiverID);
 
-            outData.writeInt(2);
-            outData.writeLong(userID);
-            outData.writeLong(receiverID);
-
-            System.out.println("here");
-            chatId = inData.readLong();
-        }
+        System.out.println("here");
+        chatId = inData.readLong();
         return chatId;
     }
 
-    public static long register(String username, String password) throws Exception {
+    public static long register(String username, String password, DataOutputStream outData, DataInputStream inData) throws Exception {
         long usersId;
-        try (Socket socket = new Socket("localhost", 1337);
-             DataOutputStream outData = new DataOutputStream(socket.getOutputStream());
-             DataInputStream inData = new DataInputStream(socket.getInputStream())) {
-            outData.writeInt(9);
-            outData.writeLong(0);
-            outData.writeLong(0);
-            outData.writeUTF(username);
-            outData.writeUTF(password);
 
-            usersId = inData.readLong();
-        }
+        outData.writeInt(9);
+        outData.writeLong(0);
+        outData.writeLong(0);
+        outData.writeUTF(username);
+        outData.writeUTF(password);
+
+        usersId = inData.readLong();
         return usersId;
     }
 
 
-    public static long login(String username, String password) throws Exception {
+    public static long login(String username, String password, DataOutputStream outData, DataInputStream inData) throws Exception {
         long usersId;
-        try (Socket socket = new Socket("localhost", 1337);
-             DataOutputStream outData = new DataOutputStream(socket.getOutputStream());
-             DataInputStream inData = new DataInputStream(socket.getInputStream())) {
-            outData.writeInt(8);
-            outData.writeLong(0);
-            outData.writeLong(0);
-            outData.writeUTF(username);
-            outData.writeUTF(password);
 
-            usersId = inData.readLong();
-        }
+
+        outData.writeInt(8);
+        outData.writeLong(0);
+        outData.writeLong(0);
+        outData.writeUTF(username);
+        outData.writeUTF(password);
+
+        usersId = inData.readLong();
         return usersId;
-    }
-
-
-    static void writeMessage(int messageType, DataOutputStream socketOut, long sender, long chatID, String text) throws Exception {
-        //if sent message is empty consider it a ping
-        socketOut.writeInt(messageType);
-        socketOut.writeLong(sender);
-        socketOut.writeLong(chatID);
-        if (!text.equals("")) {
-            socketOut.writeUTF(text);
-        }
     }
 
     static List<String> readMessage(DataInputStream socketIn) throws Exception {
