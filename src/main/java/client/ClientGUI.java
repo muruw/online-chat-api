@@ -125,6 +125,7 @@ public class ClientGUI extends Application {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                
             });
         });
 
