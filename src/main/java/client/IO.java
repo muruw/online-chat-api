@@ -13,20 +13,19 @@ Immediately sends a ping with payload, if Response Sever calls IO out.
  */
 public class IO {
 
-    public static List<String> sendMessage(int messageType, String message, String userID, String chatID, DataOutputStream outData, DataInputStream inData) throws Exception {
+    public static List<String> sendMessage(String message, String userID, String chatID, DataOutputStream outData, DataInputStream inData) throws Exception {
         System.out.println("Sending Message");
 
-        try {
-            outData.writeInt(messageType);
-            outData.writeUTF(userID);
-            outData.writeUTF(chatID);
-            if (!message.equals("")) {
-                outData.writeUTF(message);
-            }
-            return readMessage(inData);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        outData.writeInt(1);
+        outData.writeUTF(userID);
+        outData.writeUTF(chatID);
+
+        if (!message.equals("")) {
+            outData.writeUTF(message);
         }
+        System.out.println("Reading message in IO");
+        return readMessage(inData);
+
 
     }
 
@@ -73,14 +72,15 @@ public class IO {
         outData.writeUTF(userID);
         outData.writeUTF(receiverID);
 
-        System.out.println("here");
+        System.out.println("Message sent out");
+
         chatId = inData.readUTF();
+
+        System.out.println("Message got in");
         return chatId;
     }
 
     public static Long register(String username, String password, DataOutputStream outData, DataInputStream inData) throws Exception {
-        Long usersId;
-
         outData.writeInt(9);
         return getString(username, password, outData, inData);
     }
@@ -105,15 +105,16 @@ public class IO {
     }
 
     static List<String> readMessage(DataInputStream socketIn) throws Exception {
+        System.out.println("Reading IO in readMessage");
         List<String> dataList = new ArrayList<>();
 
         int msgcount = socketIn.readInt();
         for (int i = 0; i < msgcount; i++) {
-            long id = socketIn.readLong();
+            String senderID = socketIn.readUTF();
             String message = socketIn.readUTF();
-            dataList.add(String.valueOf(id));
+            dataList.add(senderID);
             dataList.add(message);
-            System.out.print("saatja id " + id);
+            System.out.print("saatja id " + senderID);
             System.out.print(" sõnum " + message);
             System.out.println(" ");
         }

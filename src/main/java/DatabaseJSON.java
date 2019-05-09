@@ -151,9 +151,11 @@ public class DatabaseJSON {
             if (id.equals(participant1) || id.equals(participant2)) {
                 newUsers.remove(data);
                 JSONArray chats = (JSONArray) data.get("chatsIds");
-                chats.add(chatid);
-                data.put("chatsIds", chats);
-                newUsers.add(data);//
+                if (chats != null) {
+                    chats.add(chatid);
+                    data.put("chatsIds", chats);
+                    newUsers.add(data);//
+                }
             }
         }
         databaseJSON.put("client", newUsers);
@@ -278,8 +280,13 @@ public class DatabaseJSON {
     }
 
     public String[] getChats(String senderId, JSONArray usersJson) {
+        // TODO: 5/9/19 Get rid of null from getUse return 
         JSONObject user = getUser(senderId, usersJson);
+        if(user == null){
+            return new String[0];
+        }
         JSONArray chats = (JSONArray) user.get("chatsIds");
+
         //int size = chats.size();
         if (chats != null) {
             int size = chats.size();

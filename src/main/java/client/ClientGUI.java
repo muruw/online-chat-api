@@ -52,8 +52,6 @@ public class ClientGUI extends Application {
         TextArea chat = new TextArea();
         chat.setMaxSize(550, 350);
         chat.setDisable(true);
-        chat.setText("test");
-
 
         // TODO: 4/19/19  usernames from database
         //usernames
@@ -65,7 +63,7 @@ public class ClientGUI extends Application {
 
 
         //add and remove buttons
-        Button add = new Button("Add chat");
+        Button add = new Button("New chat");
         add.setPrefSize(100,20);
         add.setOnAction(actionEvent -> {
             TextInputDialog newChat = new TextInputDialog();
@@ -112,7 +110,7 @@ public class ClientGUI extends Application {
 
             answer.ifPresent(personsID -> {
                 try {
-                    IO.removeChat(userNames.getSelectionModel().getSelectedItem(),mainOutStream);
+                    IO.removeFromChat(userNames.getSelectionModel().getSelectedItem(),personsID,mainOutStream);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -131,6 +129,7 @@ public class ClientGUI extends Application {
             if (result.get() == ButtonType.OK){
                 try {
                     IO.removeChat(userNames.getSelectionModel().getSelectedItem(),mainOutStream);
+                    users.remove(userNames.getSelectionModel().getSelectedItem());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -155,7 +154,12 @@ public class ClientGUI extends Application {
         sendButton.setPrefSize(70,40);
         sendButton.setOnAction(event -> {
             try {
-                List<String> messages = IO.sendMessage(1, textArea.getText(), mainUser, userNames.getSelectionModel().getSelectedItem(), mainOutStream, mainInStream);
+                List<String> messages = IO.sendMessage(textArea.getText(), mainUser, userNames.getSelectionModel().getSelectedItem(), mainOutStream, mainInStream);
+                System.out.println("GlientGui got message in");
+                for(String s : messages){
+                    System.out.println(s);
+                }
+
                 textArea.clear();
                 chat.setText(messageParser(messages));
             } catch (Exception e) {
@@ -213,11 +217,11 @@ public class ClientGUI extends Application {
             if (passwordConfirm.getText().equals(passwordRegister.getText())) {
                 try {
                     Long userId = IO.register(usernameRegister.getText(), passwordConfirm.getText(), mainOutStream,mainInStream);
-                    mainUser = usernameRegister.getText();
                     if(userId != -1) {
-                        System.out.println(userId + " logged in");
+                        mainUser = usernameRegister.getText();
                         // TODO: 5/8/19 Lisada id saatmine ka edasi
                         updateChats(users);
+                        chat.setText("Logged in as " + mainUser);
                         peaLava.setScene(tseen1);
                     }
                 } catch (Exception e) {
@@ -251,10 +255,10 @@ public class ClientGUI extends Application {
         login.setOnAction(actionEvent -> {
             try {
                 Long userId = IO.login(username.getText(), password.getText(), mainOutStream,mainInStream);
-                mainUser = username.getText();
                 if (userId != -1) {
-                    // TODO: 5/8/19 Lisada id saatmine ka edasi
+                    mainUser = username.getText();
                     updateChats(users);
+                    chat.setText("Logged in as " + mainUser);
                     peaLava.setScene(tseen1);
                 }
             } catch (Exception e) {
@@ -278,6 +282,7 @@ public class ClientGUI extends Application {
 
         //
         peaLava.setScene(tseen2);
+
         peaLava.show();
         //
 
