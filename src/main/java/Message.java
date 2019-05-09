@@ -1,4 +1,5 @@
 import java.time.Instant;
+
 public class Message implements Comparable {
 
     private String chatid;
@@ -6,7 +7,7 @@ public class Message implements Comparable {
     private String message;
     private Instant time;
 
-    public Message(String chatid, String senderid, String message, String time){
+    public Message(String chatid, String senderid, String message, String time) {
         this.chatid = chatid;
         this.senderid = senderid;
         this.message = message;

@@ -33,12 +33,17 @@ public class ClientGUI extends Application {
         this.options = new ArrayList<>();
     }
 
+    public static void main(String[] args) {
+        launch(args);
+    }
+
     @Override
     public void start(Stage peaLava) {
-        try{mainSocket = new Socket("localhost", 1337);
+        try {
+            mainSocket = new Socket("localhost", 1337);
             mainOutStream = new DataOutputStream(mainSocket.getOutputStream());
-            mainInStream= new DataInputStream(mainSocket.getInputStream());
-        }catch (Exception e){
+            mainInStream = new DataInputStream(mainSocket.getInputStream());
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
@@ -61,10 +66,9 @@ public class ClientGUI extends Application {
         userNames.getSelectionModel().selectedItemProperty().addListener((observableValue, s, t1) -> chat.setText(s + t1));
 
 
-
         //add and remove buttons
         Button add = new Button("New chat");
-        add.setPrefSize(100,20);
+        add.setPrefSize(100, 20);
         add.setOnAction(actionEvent -> {
             TextInputDialog newChat = new TextInputDialog();
             newChat.setTitle("Create a new chat");
@@ -74,7 +78,7 @@ public class ClientGUI extends Application {
             answer.ifPresent(personsID -> {
                 try {
                     // TODO: 4/21/19 Server should have a check that no duplicate chats
-                    String chatId = IO.newChat(mainUser, personsID, mainOutStream,mainInStream);
+                    String chatId = IO.newChat(mainUser, personsID, mainOutStream, mainInStream);
                     users.add(String.valueOf(chatId));
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -83,7 +87,7 @@ public class ClientGUI extends Application {
         });
 
         Button addPeople = new Button("Add person");
-        addPeople.setPrefSize(100,20);
+        addPeople.setPrefSize(100, 20);
         addPeople.setOnAction(actionEvent -> {
             TextInputDialog newChat = new TextInputDialog();
             newChat.setTitle("Add an user");
@@ -93,7 +97,7 @@ public class ClientGUI extends Application {
             answer.ifPresent(personsID -> {
                 try {
                     // TODO: 4/21/19 Server should have a check that no duplicate chats
-                    IO.addPerson(userNames.getSelectionModel().getSelectedItem(),personsID,mainOutStream);
+                    IO.addPerson(userNames.getSelectionModel().getSelectedItem(), personsID, mainOutStream);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -101,7 +105,7 @@ public class ClientGUI extends Application {
         });
 
         Button removePerson = new Button("Delete user");
-        removePerson.setPrefSize(100,20);
+        removePerson.setPrefSize(100, 20);
         removePerson.setOnAction(actionEvent -> {
             TextInputDialog newChat = new TextInputDialog();
             newChat.setTitle("Remove person");
@@ -110,7 +114,7 @@ public class ClientGUI extends Application {
 
             answer.ifPresent(personsID -> {
                 try {
-                    IO.removeFromChat(userNames.getSelectionModel().getSelectedItem(),personsID,mainOutStream);
+                    IO.removeFromChat(userNames.getSelectionModel().getSelectedItem(), personsID, mainOutStream);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -118,7 +122,7 @@ public class ClientGUI extends Application {
         });
 
         Button deleteChat = new Button("Delete Chat");
-        deleteChat.setPrefSize(100,20);
+        deleteChat.setPrefSize(100, 20);
         deleteChat.setOnAction(actionEvent -> {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle("Delete chat");
@@ -126,9 +130,9 @@ public class ClientGUI extends Application {
             alert.setContentText("This will delete the chat and its contents for everyone");
 
             Optional<ButtonType> result = alert.showAndWait();
-            if (result.get() == ButtonType.OK){
+            if (result.get() == ButtonType.OK) {
                 try {
-                    IO.removeChat(userNames.getSelectionModel().getSelectedItem(),mainOutStream);
+                    IO.removeChat(userNames.getSelectionModel().getSelectedItem(), mainOutStream);
                     users.remove(userNames.getSelectionModel().getSelectedItem());
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -137,26 +141,24 @@ public class ClientGUI extends Application {
         });
 
 
-
-
         TextField textArea = new TextField();
-        textArea.setPrefSize(480,40);
+        textArea.setPrefSize(480, 40);
         //fetch data
         Button refresh = new Button("Refresh");
-        refresh.setPrefSize(100,20);
+        refresh.setPrefSize(100, 20);
         refresh.setOnAction(actionEvent -> {
-                              // TODO: 5/8/19 Lisada id saatmine ka edasi
+            // TODO: 5/8/19 Lisada id saatmine ka edasi
             updateChats(users);
         });
 
         //SendButton
         Button sendButton = new Button("Send");
-        sendButton.setPrefSize(70,40);
+        sendButton.setPrefSize(70, 40);
         sendButton.setOnAction(event -> {
             try {
                 List<String> messages = IO.sendMessage(textArea.getText(), mainUser, userNames.getSelectionModel().getSelectedItem(), mainOutStream, mainInStream);
                 System.out.println("GlientGui got message in");
-                for(String s : messages){
+                for (String s : messages) {
                     System.out.println(s);
                 }
 
@@ -169,10 +171,10 @@ public class ClientGUI extends Application {
 
         HBox addRow = new HBox();
         HBox removeRow = new HBox();
-        removeRow.getChildren().addAll(deleteChat,removePerson);
-        addRow.getChildren().addAll(add,addPeople);
+        removeRow.getChildren().addAll(deleteChat, removePerson);
+        addRow.getChildren().addAll(add, addPeople);
         VBox userNamesAndButtons = new VBox();
-        userNamesAndButtons.getChildren().addAll(userNames, addRow,removeRow,refresh );
+        userNamesAndButtons.getChildren().addAll(userNames, addRow, removeRow, refresh);
         VBox userMessages = new VBox();
         HBox textAreaWithSend = new HBox();
 
@@ -216,8 +218,8 @@ public class ClientGUI extends Application {
         registerConfirm.setOnAction(actionEvent -> {
             if (passwordConfirm.getText().equals(passwordRegister.getText())) {
                 try {
-                    Long userId = IO.register(usernameRegister.getText(), passwordConfirm.getText(), mainOutStream,mainInStream);
-                    if(userId != -1) {
+                    Long userId = IO.register(usernameRegister.getText(), passwordConfirm.getText(), mainOutStream, mainInStream);
+                    if (userId != -1) {
                         mainUser = usernameRegister.getText();
                         // TODO: 5/8/19 Lisada id saatmine ka edasi
                         updateChats(users);
@@ -254,7 +256,7 @@ public class ClientGUI extends Application {
         Button login = new Button("Login");
         login.setOnAction(actionEvent -> {
             try {
-                Long userId = IO.login(username.getText(), password.getText(), mainOutStream,mainInStream);
+                Long userId = IO.login(username.getText(), password.getText(), mainOutStream, mainInStream);
                 if (userId != -1) {
                     mainUser = username.getText();
                     updateChats(users);
@@ -291,22 +293,17 @@ public class ClientGUI extends Application {
     private void updateChats(ObservableList<String> users) {
         List<Long> userIDS;
         try {
-            userIDS = IO.getChat(mainUser,mainOutStream,mainInStream);
+            userIDS = IO.getChat(mainUser, mainOutStream, mainInStream);
 
-            for(Long id : userIDS){
+            for (Long id : userIDS) {
                 System.out.println(id);
-                if(!users.contains(String.valueOf(id))) {
+                if (!users.contains(String.valueOf(id))) {
                     users.add(String.valueOf(id));
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-
-    public static void main(String[] args) {
-        launch(args);
     }
 
     //Someone made chats and did not inform me. Atm does not not display other users info. Will work together next week to resolve

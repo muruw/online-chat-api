@@ -142,27 +142,9 @@ public class DatabaseJSON {
         users.add(participant2);
         chat.put("users", users);
         chatsJson.add(chat);
-        databaseJSON.put("chats", chatsJson);
 
-        JSONArray newUsers = (JSONArray) usersJson.clone();
-        for (Object o : usersJson) {
-            JSONObject data = (JSONObject) o;
-            String id = (String) data.get("id");
-            if (id.equals(participant1) || id.equals(participant2)) {
-                newUsers.remove(data);
-                JSONArray chats = (JSONArray) data.get("chatsIds");
-                if (chats != null) {
-                    chats.add(chatid);
-                    data.put("chatsIds", chats);
-                    newUsers.add(data);//
-                }
-            }
-        }
-        databaseJSON.put("client", newUsers);
-
-        try (FileWriter file = new FileWriter("client_db.json")) {
-            file.write(databaseJSON.toJSONString());
-        }
+        usersJson = modifyChatName("", chatid, users, usersJson);
+        putIntoDatabase(databaseJSON, chatsJson, usersJson);
         return chatid;
     }
 
@@ -191,7 +173,7 @@ public class DatabaseJSON {
         JSONArray users = new JSONArray();
         String newChatid;
         if (chatid.startsWith(participant)) {
-            newChatid = chatid.replace(participant+";", "");
+            newChatid = chatid.replace(participant + ";", "");
         } else {
             newChatid = chatid.replace(";" + participant, "");
         }
@@ -251,7 +233,7 @@ public class DatabaseJSON {
     public void addUser(String username, JSONObject databaseJson, JSONArray usersJson) throws Exception {
         JSONObject user = new JSONObject();
         user.put("id", username);
-        user.put("chats", new JSONArray());
+        user.put("chatsIds", new JSONArray());
         usersJson.add(user);
         databaseJson.put("client", usersJson);
         try (FileWriter file = new FileWriter("client_db.json")) {

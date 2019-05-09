@@ -37,6 +37,7 @@ public class Client {
                 outData.writeUTF(args[1]);
                 outData.writeUTF("0");
                 int suurus = inData.readInt();
+                System.out.println(suurus);
                 for (int i = 0; i < suurus; i++) {
                     System.out.println(inData.readUTF());
                 }
