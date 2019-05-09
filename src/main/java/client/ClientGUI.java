@@ -12,6 +12,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 import java.io.DataInputStream;
@@ -54,16 +55,27 @@ public class ClientGUI extends Application {
         HBox navigationBar = new HBox();
 
         //ChatBoxmis
-        TextArea chat = new TextArea();
-        chat.setMaxSize(550, 350);
-        chat.setDisable(true);
+        Text chat = new Text();
+        //chat.setMaxSize(550, 350);
+
+        //chat.setDisable(true);
+        ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setPrefSize(550, 350);
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.setContent(chat);
 
         // TODO: 4/19/19  usernames from database
         //usernames
         ListView<String> userNames = new ListView<>(users);
         userNames.setPrefSize(200, 550);
         userNames.setOrientation(Orientation.VERTICAL);
-        userNames.getSelectionModel().selectedItemProperty().addListener((observableValue, s, t1) -> chat.setText(s + t1));
+        userNames.getSelectionModel().selectedItemProperty().addListener((observableValue, s, t1) -> {
+            try {
+                chat.setText(messageParser(IO.refreshMessage(mainUser, userNames.getSelectionModel().getSelectedItem(), mainOutStream, mainInStream)));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
 
 
         //add and remove buttons
@@ -98,6 +110,8 @@ public class ClientGUI extends Application {
                 try {
                     // TODO: 4/21/19 Server should have a check that no duplicate chats
                     IO.addPerson(userNames.getSelectionModel().getSelectedItem(), personsID, mainOutStream);
+                    users.clear();
+                    updateChats(users);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -147,7 +161,7 @@ public class ClientGUI extends Application {
         Button refresh = new Button("Refresh");
         refresh.setPrefSize(100, 20);
         refresh.setOnAction(actionEvent -> {
-            // TODO: 5/8/19 Lisada id saatmine ka edasi
+            users.clear();
             updateChats(users);
         });
 
@@ -156,14 +170,11 @@ public class ClientGUI extends Application {
         sendButton.setPrefSize(70, 40);
         sendButton.setOnAction(event -> {
             try {
-                List<String> messages = IO.sendMessage(textArea.getText(), mainUser, userNames.getSelectionModel().getSelectedItem(), mainOutStream, mainInStream);
-                System.out.println("GlientGui got message in");
-                for (String s : messages) {
-                    System.out.println(s);
+                if (userNames.getSelectionModel().getSelectedItem() != null) {
+                    List<String> messages = IO.sendMessage(textArea.getText(), mainUser, userNames.getSelectionModel().getSelectedItem(), mainOutStream, mainInStream);
+                    textArea.clear();
+                    chat.setText(messageParser(messages));
                 }
-
-                textArea.clear();
-                chat.setText(messageParser(messages));
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -191,7 +202,7 @@ public class ClientGUI extends Application {
         border.setStyle("-fx-background-color: #fff;");
         textAreaWithSend.getChildren().addAll(textArea, sendButton);
         border.setTop(navigationBar);
-        border.setLeft(chat);
+        border.setLeft(scrollPane);
         border.setRight(userNamesAndButtons);
         border.setBottom(textAreaWithSend);
         border.setCenter(userMessages);
@@ -291,11 +302,10 @@ public class ClientGUI extends Application {
     }
 
     private void updateChats(ObservableList<String> users) {
-        List<Long> userIDS;
+        List<String> userIDS;
         try {
             userIDS = IO.getChat(mainUser, mainOutStream, mainInStream);
-
-            for (Long id : userIDS) {
+            for (String id : userIDS) {
                 System.out.println(id);
                 if (!users.contains(String.valueOf(id))) {
                     users.add(String.valueOf(id));
@@ -309,13 +319,26 @@ public class ClientGUI extends Application {
     //Someone made chats and did not inform me. Atm does not not display other users info. Will work together next week to resolve
     public String messageParser(List<String> inputData) {
         StringBuilder textToDisplay = new StringBuilder();
+        String lastUser = "";
         for (int i = 0; i < inputData.size(); i++) {
             if (i % 2 == 0) {
+
                 if (inputData.get(i).equals(mainUser)) {
-                    textToDisplay.append(inputData.get(i)).append(": ");
+                    if (!inputData.get(i).equals(lastUser)) {
+                        textToDisplay.append(inputData.get(i)).append(": ");
+                    } else {
+                        textToDisplay.append("  ".repeat(lastUser.length())).append("  ");
+                    }
                 } else {
-                    textToDisplay.append("                                                                               ").append(inputData.get(i)).append(": ");
+                    if (!inputData.get(i).equals(lastUser)) {
+                        textToDisplay.append("                                                                     ").append(inputData.get(i)).append(": ");
+
+                    } else {
+                        textToDisplay.append("                                                                     " + "  ".repeat(lastUser.length()) + "  ");
+                    }
                 }
+                lastUser = inputData.get(i);
+
             } else {
                 textToDisplay.append(inputData.get(i)).append("\n");
             }

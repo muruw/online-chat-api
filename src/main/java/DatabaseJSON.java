@@ -173,9 +173,11 @@ public class DatabaseJSON {
         JSONArray users = new JSONArray();
         String newChatid;
         if (chatid.startsWith(participant)) {
-            newChatid = chatid.replace(participant + ";", "");
+            newChatid = chatid.replaceFirst(participant + ";", "");
+        } else if (chatid.endsWith(participant)) {
+            newChatid = replaceLast(chatid,";" + participant, "");
         } else {
-            newChatid = chatid.replace(";" + participant, "");
+            newChatid = chatid.replace(";"+participant+ ";", ";");
         }
         for (int i = 0; i < chatsJson.size(); i++) {
             JSONObject data = (JSONObject) chatsJson.get(i);
@@ -287,5 +289,16 @@ public class DatabaseJSON {
             usersJson.add(data);
         }
         return usersJson;
+    }
+
+    public static String replaceLast(String string, String toReplace, String replacement) {
+        int pos = string.lastIndexOf(toReplace);
+        if (pos > -1) {
+            return string.substring(0, pos)
+                    + replacement
+                    + string.substring(pos + toReplace.length(), string.length());
+        } else {
+            return string;
+        }
     }
 }

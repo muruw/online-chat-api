@@ -16,6 +16,9 @@ public class IO {
     public static List<String> sendMessage(String message, String userID, String chatID, DataOutputStream outData, DataInputStream inData) throws Exception {
         System.out.println("Sending Message");
 
+        System.out.println("message: " + message);
+        System.out.println("userid " + userID);
+        System.out.println("chatid " + chatID);
         outData.writeInt(1);
         outData.writeUTF(userID);
         outData.writeUTF(chatID);
@@ -29,8 +32,18 @@ public class IO {
 
     }
 
-    public static List<Long> getChat(String mainUser, DataOutputStream out, DataInputStream in) throws Exception {
-        List<Long> test = new ArrayList<>();
+    public static List<String> refreshMessage(String userID, String chatID, DataOutputStream outData, DataInputStream inData) throws Exception {
+        outData.writeInt(0);
+        outData.writeUTF(userID);
+        outData.writeUTF(chatID);
+
+        return readMessage(inData);
+
+
+    }
+
+    public static List<String> getChat(String mainUser, DataOutputStream out, DataInputStream in) throws Exception {
+        List<String> test = new ArrayList<>();
 
         out.writeInt(6);
         out.writeUTF(mainUser);
@@ -41,7 +54,7 @@ public class IO {
         int chatCount = in.readInt();
         System.out.println("chatCount " + chatCount);
         for (int i = 0; i < chatCount; i++) {
-            Long line = in.readLong();
+            String line = in.readUTF();
             test.add(line);
         }
         return test;
@@ -49,20 +62,20 @@ public class IO {
 
     public static void removeChat(String chatID, DataOutputStream outData) throws IOException {
         outData.writeInt(4);
-        outData.writeUTF(chatID);
         outData.writeUTF("");
+        outData.writeUTF(chatID);
     }
 
     public static void addPerson(String chatID, String username, DataOutputStream outData) throws IOException {
         outData.writeInt(3);
-        outData.writeUTF(chatID);
         outData.writeUTF(username);
+        outData.writeUTF(chatID);
     }
 
     public static void removeFromChat(String chatID, String remove, DataOutputStream outData) throws IOException {
         outData.writeInt(5);
-        outData.writeUTF(chatID);
         outData.writeUTF(remove);
+        outData.writeUTF(chatID);
     }
 
     public static String newChat(String userID, String receiverID, DataOutputStream outData, DataInputStream inData) throws IOException {

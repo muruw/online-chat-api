@@ -54,8 +54,11 @@ public class serverThread implements Runnable {
                 String senderId = socketIn.readUTF();
                 String chatId = socketIn.readUTF();
                 System.out.println(type);
+                System.out.println("Senderid " + senderId);
+                System.out.println("Chatid " + chatId);
                 System.out.println("Server is running");
                 if (type == 1) {
+                    System.out.println("in send message");
                     String text = socketIn.readUTF();
                     System.out.println(text);
                     String time = Instant.now().toString();
@@ -65,6 +68,7 @@ public class serverThread implements Runnable {
                 } else if (type == 0) {
                     writeMessage(socketOut, chatId);
                 } else if (type == 2) {
+                    //chatid in this case means the other persons id
                     String thischatid = database.newChat(senderId, chatId, databaseObject, chatsJSON, usersJSON); // mõlema inimese id-d
                     socketOut.writeUTF(thischatid);
                 } else if (type == 3) {
