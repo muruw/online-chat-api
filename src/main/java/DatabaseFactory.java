@@ -9,6 +9,7 @@ import java.io.Reader;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 /*
                                        _
@@ -82,9 +83,12 @@ public class DatabaseFactory {
         ps.setString(2, passwordHash);
         ps.executeUpdate();
 
+        // generate a confirmation code
+        int code = ThreadLocalRandom.current().nextInt(500, 999);
+
         // every time a user has been created we send a mail to the user
-        String msg = "Thank you for registering";
-        SendMail sendMail = new SendMail("looga.krister@gmail.com", msg);
+        String msg = "Thank you for registering! YOUR CODE IS: " + code + ". Please contact looga.krister@gmail.com";
+        SendMail sendMail = new SendMail("magnarvares@gmail.com", msg);
         sendMail.sendEmail();
 
         return true;
