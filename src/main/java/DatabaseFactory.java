@@ -1,15 +1,9 @@
-
-
-import de.mkammerer.argon2.Argon2;
-import de.mkammerer.argon2.Argon2Factory;
-import org.h2.tools.RunScript;
+import client.SendMail;
 
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 /*
                                        _
@@ -30,7 +24,8 @@ ___________[_]_[_]_[_]______________/_]_[_\___________________________________
 
 public class DatabaseFactory {
 
-    final Argon2 argon2 = Argon2Factory.create();
+    final SendMail sendMail = new SendMail();
+
     /**
      * @return connection to the database
      * @throws Exception
@@ -75,21 +70,11 @@ public class DatabaseFactory {
             return false;
         }
 
-        String passwordHash = argon2.hash(30, 65536, 1, password1.toCharArray());
-
         PreparedStatement ps = connection.prepareStatement("INSERT INTO Users(username, password) VALUES(?, ?);");
 
         ps.setString(1, username);
-        ps.setString(2, passwordHash);
+        ps.setString(2, password1);
         ps.executeUpdate();
-
-        // generate a confirmation code
-        int code = ThreadLocalRandom.current().nextInt(500, 999);
-
-        // every time a user has been created we send a mail to the user
-        String msg = "Thank you for registering! YOUR CODE IS: " + code + ". Please contact looga.krister@gmail.com";
-        SendMail sendMail = new SendMail("magnarvares@gmail.com", msg);
-        sendMail.sendEmail();
 
         return true;
     }
@@ -100,11 +85,10 @@ public class DatabaseFactory {
             while (rs.next()) {
                 String rs_username = rs.getString("username");
                 String rs_password = rs.getString("password");
-                if (rs_username.equals(username) && argon2.verify(rs_password, password)) {
+                if (rs_username.equals(username) && rs_password.equals(password)) {
                     return true;
                 }
             }
-            System.out.println("fail");
         }
         return false;
     }

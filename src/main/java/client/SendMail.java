@@ -1,3 +1,4 @@
+package client;
 
 import java.util.Properties;
 import javax.mail.Message;
@@ -9,15 +10,8 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 public class SendMail {
 
-    private String to;
-    private String msg;
 
-    public SendMail(String to, String msg){
-        this.to = to;
-        this.msg = msg;
-    }
-
-    public void sendEmail()
+    public void sendEmail(String to, String msg)
     {
         final String username = "noflow.noreply@gmail.com\t";
         final String password = "Noflow123";

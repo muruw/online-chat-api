@@ -3,8 +3,6 @@ package client;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
@@ -14,28 +12,47 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
+
+import static javafx.scene.paint.Color.SNOW;
 
 public class ClientGUI extends Application {
-    private long mainUser;
+    private String mainUser;
+    private String mainPassword;
     private List<String> options;
+    private Socket mainSocket;
+    private DataOutputStream mainOutStream;
+    private DataInputStream mainInStream;
+
+
+    private final SendMail sendMail = new SendMail();
 
     public ClientGUI() {
         this.options = new ArrayList<>();
     }
 
-    public void addUserNames(String name) {
-        options.add(name);
+    public static void main(String[] args) {
+        launch(args);
     }
 
     @Override
-    public void start(Stage peaLava) throws Exception {
-
+    public void start(Stage peaLava) {
+        try {
+            mainSocket = new Socket("localhost", 1337);
+            mainOutStream = new DataOutputStream(mainSocket.getOutputStream());
+            mainInStream = new DataInputStream(mainSocket.getInputStream());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 
         ObservableList<String> users = FXCollections.observableArrayList();
         System.out.println(this.options);
@@ -43,55 +60,115 @@ public class ClientGUI extends Application {
         BorderPane border = new BorderPane();
         HBox navigationBar = new HBox();
 
-        //ChatBox
+        //ChatBoxmis
         TextArea chat = new TextArea();
-        chat.setMaxSize(500, 350);
+        chat.setMaxSize(550, 350);
         chat.setDisable(true);
-        chat.setText("test");
-
 
         // TODO: 4/19/19  usernames from database
         //usernames
         ListView<String> userNames = new ListView<>(users);
-        userNames.setPrefSize(150, 550);
+        userNames.setPrefSize(200, 550);
         userNames.setOrientation(Orientation.VERTICAL);
         userNames.getSelectionModel().selectedItemProperty().addListener((observableValue, s, t1) -> chat.setText(s + t1));
 
-        //add and remove buttons
-        Button add = new Button("Add chat");
-        add.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                TextInputDialog newChat = new TextInputDialog();
-                newChat.setTitle("Create a new chat");
-                newChat.setHeaderText("Give ID with whom to open chat");
-                Optional<String> answer = newChat.showAndWait();
 
-                answer.ifPresent(personsID -> {
-                    try {
-                        // TODO: 4/21/19 Server should have a check that no duplicate chats 
-                        long chatId = IO.newChat(mainUser, Long.parseLong(personsID));
-                        users.add(String.valueOf(chatId));
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                });
+        //add and remove buttons
+        Button add = new Button("New chat");
+        add.setPrefSize(100, 20);
+        add.setOnAction(actionEvent -> {
+            TextInputDialog newChat = new TextInputDialog();
+            newChat.setTitle("Create a new chat");
+            newChat.setHeaderText("Give userName or chatName with what you want to connect");
+            Optional<String> answer = newChat.showAndWait();
+
+            answer.ifPresent(personsID -> {
+                try {
+                    // TODO: 4/21/19 Server should have a check that no duplicate chats
+                    String chatId = IO.newChat(mainUser, personsID, mainOutStream, mainInStream);
+                    users.add(String.valueOf(chatId));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        });
+
+        Button addPeople = new Button("Add person");
+        addPeople.setPrefSize(100, 20);
+        addPeople.setOnAction(actionEvent -> {
+            TextInputDialog newChat = new TextInputDialog();
+            newChat.setTitle("Add an user");
+            newChat.setHeaderText("Enter the users name who you wish to add");
+            Optional<String> answer = newChat.showAndWait();
+
+            answer.ifPresent(personsID -> {
+                try {
+                    // TODO: 4/21/19 Server should have a check that no duplicate chats
+                    IO.addPerson(userNames.getSelectionModel().getSelectedItem(), personsID, mainOutStream);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        });
+
+        Button removePerson = new Button("Delete user");
+        removePerson.setPrefSize(100, 20);
+        removePerson.setOnAction(actionEvent -> {
+            TextInputDialog newChat = new TextInputDialog();
+            newChat.setTitle("Remove person");
+            newChat.setHeaderText("Enter the username you want to remove");
+            Optional<String> answer = newChat.showAndWait();
+
+            answer.ifPresent(personsID -> {
+                try {
+                    IO.removeFromChat(userNames.getSelectionModel().getSelectedItem(), personsID, mainOutStream);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+        });
+
+        Button deleteChat = new Button("Delete Chat");
+        deleteChat.setPrefSize(100, 20);
+        deleteChat.setOnAction(actionEvent -> {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Delete chat");
+            alert.setHeaderText("Are you sure you want to delete this chat");
+            alert.setContentText("This will delete the chat and its contents for everyone");
+
+            Optional<ButtonType> result = alert.showAndWait();
+            if (result.get() == ButtonType.OK) {
+                try {
+                    IO.removeChat(userNames.getSelectionModel().getSelectedItem(), mainOutStream);
+                    users.remove(userNames.getSelectionModel().getSelectedItem());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         });
 
 
-        VBox userNamesAndButtons = new VBox();
-        userNamesAndButtons.getChildren().addAll(userNames, add);
-        VBox userMessages = new VBox();
-        HBox textAreaWithSend = new HBox();
         TextField textArea = new TextField();
+        textArea.setPrefSize(480, 40);
+        //fetch data
+        Button refresh = new Button("Refresh");
+        refresh.setPrefSize(100, 20);
+        refresh.setOnAction(actionEvent -> {
+            // TODO: 5/8/19 Lisada id saatmine ka edasi
+            updateChats(users);
+        });
 
         //SendButton
         Button sendButton = new Button("Send");
+        sendButton.setPrefSize(70, 40);
         sendButton.setOnAction(event -> {
             try {
-                System.out.println(mainUser);
-                List<String> messages = IO.sendMessage(1, textArea.getText(), mainUser, Long.parseLong(userNames.getSelectionModel().getSelectedItem()));
+                List<String> messages = IO.sendMessage(textArea.getText(), mainUser, userNames.getSelectionModel().getSelectedItem(), mainOutStream, mainInStream);
+                System.out.println("ClientGui got message in");
+                for (String s : messages) {
+                    System.out.println(s);
+                }
+
                 textArea.clear();
                 chat.setText(messageParser(messages));
             } catch (Exception e) {
@@ -99,6 +176,14 @@ public class ClientGUI extends Application {
             }
         });
 
+        HBox addRow = new HBox();
+        HBox removeRow = new HBox();
+        removeRow.getChildren().addAll(deleteChat, removePerson);
+        addRow.getChildren().addAll(add, addPeople);
+        VBox userNamesAndButtons = new VBox();
+        userNamesAndButtons.getChildren().addAll(userNames, addRow, removeRow, refresh);
+        VBox userMessages = new VBox();
+        HBox textAreaWithSend = new HBox();
 
 /*
         options.addListener((ListChangeListener<String>) change -> {
@@ -119,7 +204,48 @@ public class ClientGUI extends Application {
         border.setCenter(userMessages);
 
 
-        Scene tseen1 = new Scene(border, 700, 400, Color.SNOW);
+        Scene tseen1 = new Scene(border, 800, 400, SNOW);
+
+        // confirm registration
+        BorderPane border3 = new BorderPane();
+        Label confirmText = new Label("Please check your email and write the code: ");
+        confirmText.setMinSize(100, 100);
+
+        TextField confirmationCode = new TextField("code");
+        confirmationCode.setMinSize(100, 100);
+
+
+        Button confirmRegistration = new Button("Confirm");
+        confirmRegistration.setOnAction(actionEvent -> {
+            try {
+
+                // Send confirmation mail
+                int code = ThreadLocalRandom.current().nextInt(500, 999);
+                String msg = "Thank you for registering! Your code is: " + code + " Please contact looga.krister@gmail.com for more info.";
+                sendMail.sendEmail("murumaem@gmail.com", msg);
+
+                if (code == Integer.parseInt(confirmationCode.getText())) {
+                    Long userId = IO.register(mainUser, mainPassword, mainOutStream, mainInStream);
+                    if (userId != -1) {
+                        updateChats(users);
+                        chat.setText("Logged in as " + mainUser);
+                        peaLava.setScene(tseen1);
+                    } else {
+                        System.out.println("Vale");
+                    }
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
+        VBox confirmRegistrationBox = new VBox();
+        confirmRegistrationBox.getChildren().addAll(confirmText, confirmationCode, confirmRegistration);
+        confirmRegistrationBox.setAlignment(Pos.CENTER);
+
+        border3.setCenter(confirmRegistrationBox);
+        Scene tseen4 = new Scene(border3, 800, 400, SNOW);
 
 
         //register
@@ -137,20 +263,15 @@ public class ClientGUI extends Application {
         passwordConfirm.setMaxSize(100, 100);
 
         Button registerConfirm = new Button("Register");
-        registerConfirm.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                if (passwordConfirm.getText().equals(passwordRegister.getText())) {
-                    try {
-                        Long userId = IO.register(usernameRegister.getText(), passwordConfirm.getText());
-                        mainUser = userId;
-                        System.out.println(userId + " logged in");
-                        peaLava.setScene(tseen1);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+        registerConfirm.setOnAction(actionEvent -> {
+            if (passwordConfirm.getText().equals(passwordRegister.getText())) {
+                try {
+                    mainUser = usernameRegister.getText();
+                    mainPassword = passwordConfirm.getText();
+                    peaLava.setScene(tseen4);
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-
             }
         });
 
@@ -159,10 +280,10 @@ public class ClientGUI extends Application {
         registerDetails.setAlignment(Pos.CENTER);
 
         border2.setCenter(registerDetails);
-        Scene tseen3 = new Scene(border2, 700, 400, Color.SNOW);
+        Scene tseen3 = new Scene(border2, 800, 400, SNOW);
 
 
-        //
+        // login
 
         BorderPane border1 = new BorderPane();
 
@@ -176,28 +297,22 @@ public class ClientGUI extends Application {
         password.setMaxSize(100, 100);
 
         Button login = new Button("Login");
-        login.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                try {
-                    Long userId = IO.login(username.getText(), password.getText());
-                    mainUser = userId;
-                    if (userId != -1) {
-                        peaLava.setScene(tseen1);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
+        login.setOnAction(actionEvent -> {
+            try {
+                Long userId = IO.login(username.getText(), password.getText(), mainOutStream, mainInStream);
+                if (userId != -1) {
+                    mainUser = username.getText();
+                    updateChats(users);
+                    chat.setText("Logged in as " + mainUser);
+                    peaLava.setScene(tseen1);
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         });
 
         Button register = new Button("Register");
-        register.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                peaLava.setScene(tseen3);
-            }
-        });
+        register.setOnAction(actionEvent -> peaLava.setScene(tseen3));
 
         VBox loginDetails = new VBox();
         HBox buttons = new HBox();
@@ -207,26 +322,30 @@ public class ClientGUI extends Application {
         loginDetails.setAlignment(Pos.CENTER);
 
         border1.setCenter(loginDetails);
-        Scene tseen2 = new Scene(border1, 700, 400, Color.SNOW);
-
+        Scene tseen2 = new Scene(border1, 800, 400, SNOW);
 
         //
         peaLava.setScene(tseen2);
+
         peaLava.show();
         //
 
     }
 
+    private void updateChats(ObservableList<String> users) {
+        List<Long> userIDS;
+        try {
+            userIDS = IO.getChat(mainUser, mainOutStream, mainInStream);
 
-
-/*
-    public static void main(String[] args) {
-        launch(args);
-
-    }*/
-
-    public void launcher(String[] args) {
-        launch(args);
+            for (Long id : userIDS) {
+                System.out.println(id);
+                if (!users.contains(String.valueOf(id))) {
+                    users.add(String.valueOf(id));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     //Someone made chats and did not inform me. Atm does not not display other users info. Will work together next week to resolve
@@ -234,7 +353,7 @@ public class ClientGUI extends Application {
         StringBuilder textToDisplay = new StringBuilder();
         for (int i = 0; i < inputData.size(); i++) {
             if (i % 2 == 0) {
-                if (Long.parseLong(inputData.get(i)) == mainUser) {
+                if (inputData.get(i).equals(mainUser)) {
                     textToDisplay.append(inputData.get(i)).append(": ");
                 } else {
                     textToDisplay.append("                                                                               ").append(inputData.get(i)).append(": ");
