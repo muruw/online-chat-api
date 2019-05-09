@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class DatabaseJSON {
@@ -133,24 +134,24 @@ public class DatabaseJSON {
     }
 
     public String newChat(String participant1, String participant2, JSONObject databaseJSON, JSONArray chatsJson, JSONArray usersJson) throws Exception {
-        String chatid = participant1 + ";" + participant2;
         JSONObject chat = new JSONObject();
-        chat.put("id", chatid);
         chat.put("messages", new JSONArray());
         JSONArray users = new JSONArray();
         users.add(participant1);
         users.add(participant2);
         chat.put("users", users);
+        String chatid = newChatName(users);
+        chat.put("id", chatid);
         chatsJson.add(chat);
 
-        usersJson = modifyChatName("", chatid, users, usersJson);
+        usersJson = changeChatNameOnAllParticipants("", chatid, users, usersJson);
         putIntoDatabase(databaseJSON, chatsJson, usersJson);
         return chatid;
     }
 
-    public void addToChat(String chatid, String participant, JSONObject databaseJson, JSONArray usersJson, JSONArray chatsJson) throws Exception {
+    public String addToChat(String chatid, String participant, JSONObject databaseJson, JSONArray usersJson, JSONArray chatsJson) throws Exception {
         JSONArray users = new JSONArray();
-        String newChatid = chatid + ";" + participant;
+        String newChatid = "";
         for (int i = 0; i < chatsJson.size(); i++) {
             JSONObject data = (JSONObject) chatsJson.get(i);
             String id = (String) data.get("id");
@@ -159,14 +160,15 @@ public class DatabaseJSON {
                 users = (JSONArray) data.get("users");
                 users.add(participant);
                 data.put("users", users);
+                newChatid = newChatName(users);
                 data.put("id", newChatid);
                 chatsJson.add(data);
             }
         }
 
-        JSONArray chats = new JSONArray();
-        usersJson = modifyChatName(chatid, newChatid, users, usersJson);
+        usersJson = changeChatNameOnAllParticipants(chatid, newChatid, users, usersJson);
         putIntoDatabase(databaseJson, chatsJson, usersJson);
+        return newChatid;
     }
 
     public JSONArray removeFromChat(String chatid, String participant, JSONObject databaseJson, JSONArray usersJson, JSONArray chatsJson) throws Exception {
@@ -198,7 +200,7 @@ public class DatabaseJSON {
         removed.put("chatsIds", chatsIds);
         usersJson.add(removed);
 
-        usersJson = modifyChatName(chatid, newChatid, users, usersJson);
+        usersJson = changeChatNameOnAllParticipants(chatid, newChatid, users, usersJson);
         putIntoDatabase(databaseJson, chatsJson, usersJson);
         return usersJson;
     }
@@ -258,14 +260,12 @@ public class DatabaseJSON {
     }
 
     public String[] getChats(String senderId, JSONArray usersJson) {
-        // TODO: 5/9/19 Get rid of null from getUse return 
         JSONObject user = getUser(senderId, usersJson);
         if (user == null) {
             return new String[0];
         }
         JSONArray chats = (JSONArray) user.get("chatsIds");
 
-        //int size = chats.size();
         if (chats != null) {
             int size = chats.size();
             String[] chatIds = new String[size];
@@ -277,7 +277,7 @@ public class DatabaseJSON {
         return new String[0];
     }
 
-    public JSONArray modifyChatName(String oldChatid, String newChatId, JSONArray users, JSONArray usersJson) {
+    public JSONArray changeChatNameOnAllParticipants(String oldChatid, String newChatId, JSONArray users, JSONArray usersJson) {
         JSONArray chats = new JSONArray();
         for (int i = 0; i < users.size(); i++) {
             JSONObject data = getUser((String) users.get(i), usersJson);
@@ -300,5 +300,15 @@ public class DatabaseJSON {
         } else {
             return string;
         }
+    }
+
+    public String newChatName(JSONArray users) {
+        List<String> userslist = new ArrayList<>();
+        for (int i=0; i<users.size(); i++) {
+            userslist.add( (String) users.get(i) );
+        }
+        Collections.sort(userslist);
+        String newChatid = String.join(";", userslist);
+        return newChatid;
     }
 }

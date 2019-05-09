@@ -20,10 +20,12 @@ public class Client {
                 outData.writeInt(2);
                 outData.writeUTF(args[1]);
                 outData.writeUTF(args[2]);
+                System.out.println(inData.readUTF());
             } else if (args[0].equals("add")) {
                 outData.writeInt(3);
                 outData.writeUTF(args[1]);
                 outData.writeUTF(args[2]);
+                System.out.println(inData.readUTF());
             } else if (args[0].equals("delete")) {
                 outData.writeInt(4);
                 outData.writeUTF(args[1]);

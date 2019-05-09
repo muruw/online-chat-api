@@ -68,11 +68,19 @@ public class serverThread implements Runnable {
                 } else if (type == 0) {
                     writeMessage(socketOut, chatId);
                 } else if (type == 2) {
-                    //chatid in this case means the other persons id
-                    String thischatid = database.newChat(senderId, chatId, databaseObject, chatsJSON, usersJSON); // mõlema inimese id-d
-                    socketOut.writeUTF(thischatid);
+                    if (database.getUser(senderId, usersJSON) != null && database.getUser(chatId, usersJSON) != null) {
+                        String thischatid = database.newChat(senderId, chatId, databaseObject, chatsJSON, usersJSON); // mõlema inimese id-d
+                        socketOut.writeUTF(thischatid);
+                    } else {
+                        socketOut.writeUTF("");
+                    }
                 } else if (type == 3) {
-                    database.addToChat(chatId, senderId, databaseObject, usersJSON, chatsJSON); // chatiid ja lisatava id
+                    if (database.getUser(senderId, usersJSON) != null && database.getChat(chatId, chatsJSON) != null) {
+                        String thischatid = database.addToChat(chatId, senderId, databaseObject, usersJSON, chatsJSON);
+                        socketOut.writeUTF(thischatid);
+                    } else {
+                        socketOut.writeUTF("");
+                    }
                 } else if (type == 4) {
                     database.deleteChat(chatId, databaseObject, usersJSON, chatsJSON); //chati id mida kustutame
                 } else if (type == 5) {
