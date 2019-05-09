@@ -1,0 +1,19 @@
+Reminder on communication IO class has all the sending and receiving functions. GlientGUI calls them out
+Serverthread handles the response on server side so communication looks like
+
+ClientGUI <--> IO <-->ServerThread <-- Server
+
+What to fix and check
+
+Empty all databases, check what happnes when you connect to user that does not exist
+(Create a check if user does not exist)
+
+Create two users, create a chat between them. Send message. Check if is displayed and saved to dabtabase.
+Close client connect with the other user.See if he sees chats on the right. See if he sees the messages sent.
+
+Check if deleting a chat removes the chat from database
+
+Check if deleteing a person removes the person from chat
+(Check if can delete himself)
+
+if these work I think we good
