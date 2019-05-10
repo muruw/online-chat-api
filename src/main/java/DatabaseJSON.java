@@ -141,6 +141,9 @@ public class DatabaseJSON {
         users.add(participant2);
         chat.put("users", users);
         String chatid = newChatName(users);
+        if (getChat(chatid, chatsJson) != null ) {
+            chatid = addDistinguisher(chatid, chatsJson);
+        }
         chat.put("id", chatid);
         chatsJson.add(chat);
 
@@ -161,6 +164,10 @@ public class DatabaseJSON {
                 users.add(participant);
                 data.put("users", users);
                 newChatid = newChatName(users);
+                if (getChat(newChatid, chatsJson) != null ) {
+                    newChatid = addDistinguisher(newChatid, chatsJson);
+                }
+
                 data.put("id", newChatid);
                 chatsJson.add(data);
             }
@@ -181,6 +188,10 @@ public class DatabaseJSON {
         } else {
             newChatid = chatid.replace(";"+participant+ ";", ";");
         }
+        if (getChat(newChatid, chatsJson) != null ) {
+            newChatid = addDistinguisher(newChatid, chatsJson);
+        }
+
         for (int i = 0; i < chatsJson.size(); i++) {
             JSONObject data = (JSONObject) chatsJson.get(i);
             String id = (String) data.get("id");
@@ -310,5 +321,19 @@ public class DatabaseJSON {
         Collections.sort(userslist);
         String newChatid = String.join(";", userslist);
         return newChatid;
+    }
+
+    public String addDistinguisher(String chatId, JSONArray chats) {
+        int i = 1;
+        String newchatId = "";
+        while (true) {
+            newchatId = chatId + "." + i;
+            if (getChat(newchatId, chats) == null) {
+                break;
+            } else {
+                i++;
+            }
+        }
+        return newchatId;
     }
 }
