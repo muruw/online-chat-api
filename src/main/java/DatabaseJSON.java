@@ -181,6 +181,8 @@ public class DatabaseJSON {
     public JSONArray removeFromChat(String chatid, String participant, JSONObject databaseJson, JSONArray usersJson, JSONArray chatsJson) throws Exception {
         JSONArray users = new JSONArray();
         String newChatid;
+        String[] chatAndDistictNumb = chatid.split(".");
+        chatid = chatAndDistictNumb[0];
         if (chatid.startsWith(participant)) {
             newChatid = chatid.replaceFirst(participant + ";", "");
         } else if (chatid.endsWith(participant)) {
