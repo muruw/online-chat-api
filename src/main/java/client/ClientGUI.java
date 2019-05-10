@@ -89,8 +89,12 @@ public class ClientGUI extends Application {
 
             answer.ifPresent(personsID -> {
                 try {
-                    String chatId = IO.newChat(mainUser, personsID, mainOutStream, mainInStream);
-                    users.add(String.valueOf(chatId));
+                    String result = IO.newChat(mainUser, personsID, mainOutStream, mainInStream);
+                    if (result.equals("")) {
+                        //TODO Some popup to let user know chat wasnt made
+                    }
+                    users.clear();
+                    updateChats(users);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -107,7 +111,10 @@ public class ClientGUI extends Application {
 
             answer.ifPresent(personsID -> {
                 try {
-                    IO.addPerson(userNames.getSelectionModel().getSelectedItem(), personsID, mainOutStream);
+                    String result = IO.addPerson(userNames.getSelectionModel().getSelectedItem(), personsID, mainOutStream, mainInStream);
+                    if (result.equals("")) {
+                        //TODO Some popup to let user know user wasnt added
+                    }
                     users.clear();
                     updateChats(users);
                 } catch (Exception e) {
@@ -126,7 +133,12 @@ public class ClientGUI extends Application {
 
             answer.ifPresent(personsID -> {
                 try {
-                    IO.removeFromChat(userNames.getSelectionModel().getSelectedItem(), personsID, mainOutStream);
+                    String result = IO.removeFromChat(userNames.getSelectionModel().getSelectedItem(), personsID, mainOutStream, mainInStream);
+                    if (result.equals("")) {
+                        //TODO Some popup to let user know user wasnt removed from chat
+                    }
+                    users.clear();
+                    updateChats(users);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -150,6 +162,28 @@ public class ClientGUI extends Application {
                     e.printStackTrace();
                 }
             }
+        });
+
+        Button customName = new Button("Custom chat name");
+        addPeople.setPrefSize(100, 20);
+        addPeople.setOnAction(actionEvent -> {
+            TextInputDialog newChat = new TextInputDialog();
+            newChat.setTitle("Change chat name");
+            newChat.setHeaderText("Enter the new chatname");
+            Optional<String> answer = newChat.showAndWait();
+
+            answer.ifPresent(newChatname -> {
+                try {
+                    String result = IO.customName(userNames.getSelectionModel().getSelectedItem(), newChatname, mainOutStream, mainInStream);
+                    if (result.equals("")) {
+                        //TODO Some popup to let user know chat name wasnt chagned
+                    }
+                    users.clear();
+                    updateChats(users);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
         });
 
 

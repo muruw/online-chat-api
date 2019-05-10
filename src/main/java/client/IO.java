@@ -1,5 +1,6 @@
 package client;
 
+import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -66,16 +67,18 @@ public class IO {
         outData.writeUTF(chatID);
     }
 
-    public static void addPerson(String chatID, String username, DataOutputStream outData) throws IOException {
+    public static String addPerson(String chatID, String username, DataOutputStream outData, DataInputStream inData) throws IOException {
         outData.writeInt(3);
         outData.writeUTF(username);
         outData.writeUTF(chatID);
+        return inData.readUTF();
     }
 
-    public static void removeFromChat(String chatID, String remove, DataOutputStream outData) throws IOException {
+    public static String removeFromChat(String chatID, String remove, DataOutputStream outData, DataInputStream inData) throws IOException {
         outData.writeInt(5);
         outData.writeUTF(remove);
         outData.writeUTF(chatID);
+        return inData.readUTF();
     }
 
     public static String newChat(String userID, String receiverID, DataOutputStream outData, DataInputStream inData) throws IOException {
@@ -134,6 +137,12 @@ public class IO {
         return dataList;
     }
 
-
+    public static String customName(String chatId, String newCustomChatname, DataOutputStream outData, DataInputStream inData) throws Exception {
+        outData.writeInt(10);
+        outData.writeUTF("");
+        outData.writeUTF(chatId);
+        outData.writeUTF(newCustomChatname);
+        return inData.readUTF();
+    }
 }
 
