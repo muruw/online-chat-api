@@ -89,7 +89,6 @@ public class ClientGUI extends Application {
 
             answer.ifPresent(personsID -> {
                 try {
-                    // TODO: 4/21/19 Server should have a check that no duplicate chats
                     String chatId = IO.newChat(mainUser, personsID, mainOutStream, mainInStream);
                     users.add(String.valueOf(chatId));
                 } catch (Exception e) {
@@ -108,7 +107,6 @@ public class ClientGUI extends Application {
 
             answer.ifPresent(personsID -> {
                 try {
-                    // TODO: 4/21/19 Server should have a check that no duplicate chats
                     IO.addPerson(userNames.getSelectionModel().getSelectedItem(), personsID, mainOutStream);
                     users.clear();
                     updateChats(users);

@@ -181,8 +181,11 @@ public class DatabaseJSON {
     public JSONArray removeFromChat(String chatid, String participant, JSONObject databaseJson, JSONArray usersJson, JSONArray chatsJson) throws Exception {
         JSONArray users = new JSONArray();
         String newChatid;
-        String[] chatAndDistictNumb = chatid.split(".");
-        chatid = chatAndDistictNumb[0];
+        System.out.println(chatid);
+        if (chatid.contains(".")) {
+            String[] chatAndDistictNumb = chatid.split(".");
+            chatid = chatAndDistictNumb[0];
+        }
         if (chatid.startsWith(participant)) {
             newChatid = chatid.replaceFirst(participant + ";", "");
         } else if (chatid.endsWith(participant)) {
@@ -337,5 +340,19 @@ public class DatabaseJSON {
             }
         }
         return newchatId;
+    }
+
+    public String customName(String oldchatid, String newchatid, JSONObject databasejson, JSONArray chatsjson, JSONArray usersjson) throws Exception {
+        if (getChat(newchatid, chatsjson) != null) {
+            newchatid = addDistinguisher(newchatid, chatsjson);
+        }
+        JSONObject chat = getChat(oldchatid, chatsjson);
+        JSONArray users = (JSONArray) chat.get("users");
+        chatsjson.remove(chat);
+        chat.put("id", newchatid);
+        chatsjson.add(chat);
+        usersjson = changeChatNameOnAllParticipants(oldchatid, newchatid, users, usersjson);
+        putIntoDatabase(databasejson, chatsjson, usersjson);
+        return newchatid;
     }
 }

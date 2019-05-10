@@ -84,7 +84,12 @@ public class serverThread implements Runnable {
                 } else if (type == 4) {
                     database.deleteChat(chatId, databaseObject, usersJSON, chatsJSON); //chati id mida kustutame
                 } else if (type == 5) {
-                    database.removeFromChat(chatId, senderId, databaseObject, usersJSON, chatsJSON); //chati id ja inimese id keda eemaldame chatist
+                    if (database.getUser(senderId, usersJSON) != null && database.getUser(chatId, usersJSON) != null) {
+                        database.removeFromChat(chatId, senderId, databaseObject, usersJSON, chatsJSON); //chati id ja inimese id keda eemaldame chatist
+                        socketOut.writeUTF("removedfromchat");
+                    } else {
+                        socketOut.writeUTF("");
+                    }
                 } else if (type == 6) {
                     String[] chats = database.getChats(senderId, usersJSON);
                     if (chats.length != 0) {
@@ -124,6 +129,14 @@ public class serverThread implements Runnable {
                                 socketOut.writeLong(-1);
                             }
                         }
+                    }
+                } else if (type == 10) {
+                    String newChatid = socketIn.readUTF();
+                    if (database.getChat(chatId, chatsJSON) != null) {
+                        newChatid = database.customName(chatId, newChatid, databaseObject, chatsJSON, usersJSON);
+                        socketOut.writeUTF(newChatid);
+                    } else {
+                        socketOut.writeUTF("");
                     }
                 } else {
                     throw new IllegalArgumentException("type " + type + " pole sobiv");

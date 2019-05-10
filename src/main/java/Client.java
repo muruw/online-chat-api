@@ -43,6 +43,11 @@ public class Client {
                 for (int i = 0; i < suurus; i++) {
                     System.out.println(inData.readUTF());
                 }
+            } else if (args[0].equals("customNam")) {
+                outData.writeInt(10);
+                outData.writeUTF("");
+                outData.writeUTF(args[1]);
+                outData.writeUTF(args[2]);
             } else if (args[0].equals("deluser")) {
                 outData.writeInt(7);
                 outData.writeUTF(args[1]);
