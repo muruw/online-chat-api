@@ -186,7 +186,7 @@ public class DatabaseJSON {
         String newChatid;
         System.out.println(chatid);
         if (chatid.contains(".")) {
-            String[] chatAndDistictNumb = chatid.split(".");
+            String[] chatAndDistictNumb = chatid.split("\\.");
             chatid = chatAndDistictNumb[0];
         }
         if (chatid.startsWith(participant)) {
