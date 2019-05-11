@@ -125,15 +125,17 @@ public class ClientGUI extends Application {
             Optional<String> answer = addNewPerson.showAndWait();
 
             answer.ifPresent(personsID -> {
-                try {
-                    String result = IO.addPerson(userNames.getSelectionModel().getSelectedItem(), personsID, mainOutStream, mainInStream);
-                    if (result.equals("")) {
-                        //TODO Some popup to let user know user wasnt added
+                if (userNames.getSelectionModel().getSelectedItem() != null) {
+                    try {
+                        String result = IO.addPerson(userNames.getSelectionModel().getSelectedItem(), personsID, mainOutStream, mainInStream);
+                        if (result.equals("")) {
+                            //TODO Some popup to let user know user wasnt added
+                        }
+                        users.clear();
+                        updateChats(users);
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-                    users.clear();
-                    updateChats(users);
-                } catch (Exception e) {
-                    e.printStackTrace();
                 }
             });
         });
@@ -149,15 +151,17 @@ public class ClientGUI extends Application {
             Optional<String> answer = newChat.showAndWait();
 
             answer.ifPresent(personsID -> {
-                try {
-                    String result = IO.removeFromChat(userNames.getSelectionModel().getSelectedItem(), personsID, mainOutStream, mainInStream);
-                    if (result.equals("")) {
-                        //TODO Some popup to let user know user wasnt removed from chat
+                if (userNames.getSelectionModel().getSelectedItem() != null) {
+                    try {
+                        String result = IO.removeFromChat(userNames.getSelectionModel().getSelectedItem(), personsID, mainOutStream, mainInStream);
+                        if (result.equals("")) {
+                            //TODO Some popup to let user know user wasnt removed from chat
+                        }
+                        users.clear();
+                        updateChats(users);
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
-                    users.clear();
-                    updateChats(users);
-                } catch (IOException e) {
-                    e.printStackTrace();
                 }
             });
         });
@@ -174,11 +178,13 @@ public class ClientGUI extends Application {
 
             Optional<ButtonType> result = alert.showAndWait();
             if (result.get() == ButtonType.OK) {
-                try {
-                    IO.removeChat(userNames.getSelectionModel().getSelectedItem(), mainOutStream);
-                    users.remove(userNames.getSelectionModel().getSelectedItem());
-                } catch (IOException e) {
-                    e.printStackTrace();
+                if (userNames.getSelectionModel().getSelectedItem() != null) {
+                    try {
+                        IO.removeChat(userNames.getSelectionModel().getSelectedItem(), mainOutStream);
+                        users.remove(userNames.getSelectionModel().getSelectedItem());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         });
@@ -194,15 +200,17 @@ public class ClientGUI extends Application {
             Optional<String> answer = newChatName.showAndWait();
 
             answer.ifPresent(newChatname -> {
-                try {
-                    String result = IO.setCustomName(userNames.getSelectionModel().getSelectedItem(), newChatname, mainOutStream, mainInStream);
-                    if (result.equals("")) {
-                        //TODO Some popup to let user know chat name wasnt chagned
+                if (userNames.getSelectionModel().getSelectedItem() != null) {
+                    try {
+                        String result = IO.setCustomName(userNames.getSelectionModel().getSelectedItem(), newChatname, mainOutStream, mainInStream);
+                        if (result.equals("")) {
+                            //TODO Some popup to let user know chat name wasnt chagned
+                        }
+                        users.clear();
+                        updateChats(users);
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-                    users.clear();
-                    updateChats(users);
-                } catch (Exception e) {
-                    e.printStackTrace();
                 }
             });
         });
@@ -213,13 +221,13 @@ public class ClientGUI extends Application {
         //fetch data
         Button refresh = new Button("Refresh");
         refresh.setPrefSize(100, 20);
-        refresh.setOnAction(actionEvent ->
-
-        {
-            try {
-                chat.setText(messageParser(IO.refreshMessage(mainUser, userNames.getSelectionModel().getSelectedItem(), mainOutStream, mainInStream)));
-            } catch (Exception e) {
-                e.printStackTrace();
+        refresh.setOnAction(actionEvent -> {
+            if (userNames.getSelectionModel().getSelectedItem() != null) {
+                try {
+                    chat.setText(messageParser(IO.refreshMessage(mainUser, userNames.getSelectionModel().getSelectedItem(), mainOutStream, mainInStream)));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
             users.clear();
             updateChats(users);
