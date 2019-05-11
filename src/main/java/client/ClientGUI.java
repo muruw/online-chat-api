@@ -28,6 +28,9 @@ import static javafx.scene.paint.Color.SNOW;
 public class ClientGUI extends Application {
     private String mainUser;
     private String mainPassword;
+
+    private int mainConfirmationCode = 0;
+
     private List<String> options;
     private Socket mainSocket;
     private DataOutputStream mainOutStream;
@@ -125,7 +128,7 @@ public class ClientGUI extends Application {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                
+
             });
         });
 
@@ -216,16 +219,13 @@ public class ClientGUI extends Application {
         confirmationCode.setMinSize(100, 100);
 
 
+
         Button confirmRegistration = new Button("Confirm");
         confirmRegistration.setOnAction(actionEvent -> {
+
             try {
 
-                // Send confirmation mail
-                int code = ThreadLocalRandom.current().nextInt(500, 999);
-                String msg = "Thank you for registering! Your code is: " + code + " Please contact looga.krister@gmail.com for more info.";
-                sendMail.sendEmail("murumaem@gmail.com", msg);
-
-                if (code == Integer.parseInt(confirmationCode.getText())) {
+                if (mainConfirmationCode == Integer.parseInt(confirmationCode.getText())) {
                     Long userId = IO.register(mainUser, mainPassword, mainOutStream, mainInStream);
                     if (userId != -1) {
                         updateChats(users);
@@ -266,6 +266,12 @@ public class ClientGUI extends Application {
         Button registerConfirm = new Button("Register");
         registerConfirm.setOnAction(actionEvent -> {
             if (passwordConfirm.getText().equals(passwordRegister.getText())) {
+                // Send confirmation mail
+                mainConfirmationCode = ThreadLocalRandom.current().nextInt(500, 999);
+                String msg = "Thank you for registering! Your code is: " + mainConfirmationCode + " Please contact looga.krister@gmail.com for more info.";
+                sendMail.sendEmail("murumaem@gmail.com", msg);
+
+
                 try {
                     mainUser = usernameRegister.getText();
                     mainPassword = passwordConfirm.getText();
