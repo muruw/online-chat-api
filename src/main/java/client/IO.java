@@ -137,7 +137,7 @@ public class IO {
         return dataList;
     }
 
-    public static String customName(String chatId, String newCustomChatname, DataOutputStream outData, DataInputStream inData) throws Exception {
+    public static String setCustomName(String chatId, String newCustomChatname, DataOutputStream outData, DataInputStream inData) throws Exception {
         outData.writeInt(10);
         outData.writeUTF("");
         outData.writeUTF(chatId);

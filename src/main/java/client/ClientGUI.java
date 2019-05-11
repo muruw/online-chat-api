@@ -8,6 +8,7 @@ import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -41,7 +42,7 @@ public class ClientGUI extends Application {
     @Override
     public void start(Stage peaLava) {
         try {
-            mainSocket = new Socket("localhost", 1337);
+            mainSocket = new Socket("localhost", 1338);
             mainOutStream = new DataOutputStream(mainSocket.getOutputStream());
             mainInStream = new DataInputStream(mainSocket.getInputStream());
         } catch (Exception e) {
@@ -56,6 +57,8 @@ public class ClientGUI extends Application {
 
         //ChatBoxmis
         Text chat = new Text();
+
+
         //chat.setMaxSize(550, 350);
 
         //chat.setDisable(true);
@@ -71,7 +74,10 @@ public class ClientGUI extends Application {
         userNames.setOrientation(Orientation.VERTICAL);
         userNames.getSelectionModel().selectedItemProperty().addListener((observableValue, s, t1) -> {
             try {
-                chat.setText(messageParser(IO.refreshMessage(mainUser, userNames.getSelectionModel().getSelectedItem(), mainOutStream, mainInStream)));
+                if (userNames.getSelectionModel().getSelectedItem() != null) {
+                    chat.setText(messageParser(IO.refreshMessage(mainUser, userNames.getSelectionModel().getSelectedItem(), mainOutStream, mainInStream)));
+                    scrollPane.setVvalue(1);
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -89,25 +95,34 @@ public class ClientGUI extends Application {
 
             answer.ifPresent(personsID -> {
                 try {
-                    String result = IO.newChat(mainUser, personsID, mainOutStream, mainInStream);
-                    if (result.equals("")) {
-                        //TODO Some popup to let user know chat wasnt made
+                    if (!personsID.isEmpty()) {
+                        String result = null;
+                        try {
+                            result = IO.newChat(mainUser, personsID, mainOutStream, mainInStream);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        users.clear();
+                        updateChats(users);
+                    } else {
+
                     }
-                    users.clear();
-                    updateChats(users);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+
             });
         });
 
         Button addPeople = new Button("Add person");
         addPeople.setPrefSize(100, 20);
-        addPeople.setOnAction(actionEvent -> {
-            TextInputDialog newChat = new TextInputDialog();
-            newChat.setTitle("Add an user");
-            newChat.setHeaderText("Enter the users name who you wish to add");
-            Optional<String> answer = newChat.showAndWait();
+        addPeople.setOnAction(actionEvent ->
+
+        {
+            TextInputDialog addNewPerson = new TextInputDialog();
+            addNewPerson.setTitle("Add an user");
+            addNewPerson.setHeaderText("Enter the users name who you wish to add");
+            Optional<String> answer = addNewPerson.showAndWait();
 
             answer.ifPresent(personsID -> {
                 try {
@@ -125,7 +140,9 @@ public class ClientGUI extends Application {
 
         Button removePerson = new Button("Delete user");
         removePerson.setPrefSize(100, 20);
-        removePerson.setOnAction(actionEvent -> {
+        removePerson.setOnAction(actionEvent ->
+
+        {
             TextInputDialog newChat = new TextInputDialog();
             newChat.setTitle("Remove person");
             newChat.setHeaderText("Enter the username you want to remove");
@@ -147,7 +164,9 @@ public class ClientGUI extends Application {
 
         Button deleteChat = new Button("Delete Chat");
         deleteChat.setPrefSize(100, 20);
-        deleteChat.setOnAction(actionEvent -> {
+        deleteChat.setOnAction(actionEvent ->
+
+        {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle("Delete chat");
             alert.setHeaderText("Are you sure you want to delete this chat");
@@ -164,17 +183,19 @@ public class ClientGUI extends Application {
             }
         });
 
-        Button customName = new Button("Custom chat name");
-        addPeople.setPrefSize(100, 20);
-        addPeople.setOnAction(actionEvent -> {
-            TextInputDialog newChat = new TextInputDialog();
-            newChat.setTitle("Change chat name");
-            newChat.setHeaderText("Enter the new chatname");
-            Optional<String> answer = newChat.showAndWait();
+        Button customName = new Button("New name");
+        customName.setPrefSize(100, 20);
+        customName.setOnAction(actionEvent ->
+
+        {
+            TextInputDialog newChatName = new TextInputDialog();
+            newChatName.setTitle("Change chat name");
+            newChatName.setHeaderText("Enter the new chatname");
+            Optional<String> answer = newChatName.showAndWait();
 
             answer.ifPresent(newChatname -> {
                 try {
-                    String result = IO.customName(userNames.getSelectionModel().getSelectedItem(), newChatname, mainOutStream, mainInStream);
+                    String result = IO.setCustomName(userNames.getSelectionModel().getSelectedItem(), newChatname, mainOutStream, mainInStream);
                     if (result.equals("")) {
                         //TODO Some popup to let user know chat name wasnt chagned
                     }
@@ -192,32 +213,55 @@ public class ClientGUI extends Application {
         //fetch data
         Button refresh = new Button("Refresh");
         refresh.setPrefSize(100, 20);
-        refresh.setOnAction(actionEvent -> {
+        refresh.setOnAction(actionEvent ->
+
+        {
+            try {
+                chat.setText(messageParser(IO.refreshMessage(mainUser, userNames.getSelectionModel().getSelectedItem(), mainOutStream, mainInStream)));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             users.clear();
             updateChats(users);
+            scrollPane.setVvalue(1);
         });
 
         //SendButton
         Button sendButton = new Button("Send");
         sendButton.setPrefSize(70, 40);
-        sendButton.setOnAction(event -> {
-            try {
-                if (userNames.getSelectionModel().getSelectedItem() != null) {
-                    List<String> messages = IO.sendMessage(textArea.getText(), mainUser, userNames.getSelectionModel().getSelectedItem(), mainOutStream, mainInStream);
-                    textArea.clear();
-                    chat.setText(messageParser(messages));
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
+        sendButton.setOnAction(event ->
+
+        {
+            sendMessage(userNames, textArea, chat, scrollPane);
+        });
+
+        //Sends message on enter key press
+        textArea.setOnKeyPressed(keyEvent ->
+
+        {
+            if (keyEvent.getCode() == KeyCode.ENTER) {
+                sendMessage(userNames, textArea, chat, scrollPane);
             }
         });
 
         HBox addRow = new HBox();
         HBox removeRow = new HBox();
-        removeRow.getChildren().addAll(deleteChat, removePerson);
-        addRow.getChildren().addAll(add, addPeople);
+        HBox lastRow = new HBox();
+        lastRow.getChildren().
+
+                addAll(refresh, customName);
+        removeRow.getChildren().
+
+                addAll(deleteChat, removePerson);
+        addRow.getChildren().
+
+                addAll(add, addPeople);
+
         VBox userNamesAndButtons = new VBox();
-        userNamesAndButtons.getChildren().addAll(userNames, addRow, removeRow, refresh);
+        userNamesAndButtons.getChildren().
+
+                addAll(userNames, addRow, removeRow, lastRow);
+
         VBox userMessages = new VBox();
         HBox textAreaWithSend = new HBox();
 
@@ -232,7 +276,9 @@ public class ClientGUI extends Application {
         //Setup
         border.setPadding(new Insets(15, 12, 15, 12));
         border.setStyle("-fx-background-color: #fff;");
-        textAreaWithSend.getChildren().addAll(textArea, sendButton);
+        textAreaWithSend.getChildren().
+
+                addAll(textArea, sendButton);
         border.setTop(navigationBar);
         border.setLeft(scrollPane);
         border.setRight(userNamesAndButtons);
@@ -258,7 +304,9 @@ public class ClientGUI extends Application {
         passwordConfirm.setMaxSize(100, 100);
 
         Button registerConfirm = new Button("Register");
-        registerConfirm.setOnAction(actionEvent -> {
+        registerConfirm.setOnAction(actionEvent ->
+
+        {
             if (passwordConfirm.getText().equals(passwordRegister.getText())) {
                 try {
                     Long userId = IO.register(usernameRegister.getText(), passwordConfirm.getText(), mainOutStream, mainInStream);
@@ -276,7 +324,9 @@ public class ClientGUI extends Application {
         });
 
         VBox registerDetails = new VBox();
-        registerDetails.getChildren().addAll(registerLabel, usernameRegister, passwordRegister, passwordConfirm, registerConfirm);
+        registerDetails.getChildren().
+
+                addAll(registerLabel, usernameRegister, passwordRegister, passwordConfirm, registerConfirm);
         registerDetails.setAlignment(Pos.CENTER);
 
         border2.setCenter(registerDetails);
@@ -297,7 +347,9 @@ public class ClientGUI extends Application {
         password.setMaxSize(100, 100);
 
         Button login = new Button("Login");
-        login.setOnAction(actionEvent -> {
+        login.setOnAction(actionEvent ->
+
+        {
             try {
                 Long userId = IO.login(username.getText(), password.getText(), mainOutStream, mainInStream);
                 if (userId != -1) {
@@ -316,9 +368,13 @@ public class ClientGUI extends Application {
 
         VBox loginDetails = new VBox();
         HBox buttons = new HBox();
-        buttons.getChildren().addAll(login, register);
+        buttons.getChildren().
+
+                addAll(login, register);
         buttons.setAlignment(Pos.CENTER);
-        loginDetails.getChildren().addAll(welcomeLabel, username, password, buttons);
+        loginDetails.getChildren().
+
+                addAll(welcomeLabel, username, password, buttons);
         loginDetails.setAlignment(Pos.CENTER);
 
         border1.setCenter(loginDetails);
@@ -331,6 +387,19 @@ public class ClientGUI extends Application {
         peaLava.show();
         //
 
+    }
+
+    private void sendMessage(ListView<String> userNames, TextField textArea, Text chat, ScrollPane scrollPane) {
+        try {
+            if (userNames.getSelectionModel().getSelectedItem() != null) {
+                List<String> messages = IO.sendMessage(textArea.getText(), mainUser, userNames.getSelectionModel().getSelectedItem(), mainOutStream, mainInStream);
+                textArea.clear();
+                chat.setText(messageParser(messages));
+                scrollPane.setVvalue(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void updateChats(ObservableList<String> users) {
@@ -348,28 +417,11 @@ public class ClientGUI extends Application {
         }
     }
 
-    //Someone made chats and did not inform me. Atm does not not display other users info. Will work together next week to resolve
     public String messageParser(List<String> inputData) {
         StringBuilder textToDisplay = new StringBuilder();
-        String lastUser = "";
         for (int i = 0; i < inputData.size(); i++) {
             if (i % 2 == 0) {
-
-                if (inputData.get(i).equals(mainUser)) {
-                    if (!inputData.get(i).equals(lastUser)) {
-                        textToDisplay.append(inputData.get(i)).append(": ");
-                    } else {
-                        textToDisplay.append("  ".repeat(lastUser.length())).append("  ");
-                    }
-                } else {
-                    if (!inputData.get(i).equals(lastUser)) {
-                        textToDisplay.append("                                                                     ").append(inputData.get(i)).append(": ");
-
-                    } else {
-                        textToDisplay.append("                                                                     " + "  ".repeat(lastUser.length()) + "  ");
-                    }
-                }
-                lastUser = inputData.get(i);
+                textToDisplay.append(" " + inputData.get(i)).append(": ");
 
             } else {
                 textToDisplay.append(inputData.get(i)).append("\n");
