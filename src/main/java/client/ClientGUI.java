@@ -21,6 +21,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -42,13 +43,14 @@ public class ClientGUI extends Application {
     @Override
     public void start(Stage peaLava) {
         try {
-            mainSocket = new Socket("localhost", 1338);
+            mainSocket = new Socket("localhost", 1337);
             mainOutStream = new DataOutputStream(mainSocket.getOutputStream());
             mainInStream = new DataInputStream(mainSocket.getInputStream());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
+        HashMap<String, String> chatsWithTime = new HashMap<>();
         ObservableList<String> users = FXCollections.observableArrayList();
         System.out.println(this.options);
         peaLava.setTitle("Online Chat");
@@ -75,7 +77,9 @@ public class ClientGUI extends Application {
         userNames.getSelectionModel().selectedItemProperty().addListener((observableValue, s, t1) -> {
             try {
                 if (userNames.getSelectionModel().getSelectedItem() != null) {
-                    chat.setText(messageParser(IO.refreshMessage(mainUser, userNames.getSelectionModel().getSelectedItem(), mainOutStream, mainInStream)));
+                    String chatid = userNames.getSelectionModel().getSelectedItem();
+                    chatid = chatid.replaceFirst("UUS! ", "");
+                    chat.setText(messageParser(IO.refreshMessage(mainUser, chatid, mainOutStream, mainInStream)));
                     scrollPane.setVvalue(1);
                 }
             } catch (Exception e) {
@@ -99,11 +103,14 @@ public class ClientGUI extends Application {
                         String result = null;
                         try {
                             result = IO.newChat(mainUser, personsID, mainOutStream, mainInStream);
+                            if (result.equals("")) {
+                                //TODO Some popup to let user know chat wasnt made
+                            }
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
                         users.clear();
-                        updateChats(users);
+                        updateChats(users, chatsWithTime);
                     } else {
 
                     }
@@ -132,7 +139,7 @@ public class ClientGUI extends Application {
                             //TODO Some popup to let user know user wasnt added
                         }
                         users.clear();
-                        updateChats(users);
+                        updateChats(users,chatsWithTime);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -158,7 +165,7 @@ public class ClientGUI extends Application {
                             //TODO Some popup to let user know user wasnt removed from chat
                         }
                         users.clear();
-                        updateChats(users);
+                        updateChats(users,chatsWithTime);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -207,7 +214,7 @@ public class ClientGUI extends Application {
                             //TODO Some popup to let user know chat name wasnt chagned
                         }
                         users.clear();
-                        updateChats(users);
+                        updateChats(users,chatsWithTime);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -230,7 +237,7 @@ public class ClientGUI extends Application {
                 }
             }
             users.clear();
-            updateChats(users);
+            updateChats(users, chatsWithTime);
             scrollPane.setVvalue(1);
         });
 
@@ -321,7 +328,7 @@ public class ClientGUI extends Application {
                     if (userId != -1) {
                         mainUser = usernameRegister.getText();
                         // TODO: 5/8/19 Lisada id saatmine ka edasi
-                        updateChats(users);
+                        updateChats(users, chatsWithTime);
                         chat.setText("Logged in as " + mainUser);
                         peaLava.setScene(tseen1);
                     }
@@ -362,7 +369,7 @@ public class ClientGUI extends Application {
                 Long userId = IO.login(username.getText(), password.getText(), mainOutStream, mainInStream);
                 if (userId != -1) {
                     mainUser = username.getText();
-                    updateChats(users);
+                    updateChats(users, chatsWithTime);
                     chat.setText("Logged in as " + mainUser);
                     peaLava.setScene(tseen1);
                 }
@@ -409,14 +416,20 @@ public class ClientGUI extends Application {
             e.printStackTrace();
         }
     }
-
-    private void updateChats(ObservableList<String> users) {
-        List<String> userIDS;
+    private void updateChats(ObservableList<String> users, HashMap<String, String> chatsWithTime) {
+        HashMap<String, String> userIDS;
         try {
             userIDS = IO.getChat(mainUser, mainOutStream, mainInStream);
-            for (String id : userIDS) {
+            for (String id : userIDS.keySet()) {
                 System.out.println(id);
-                if (!users.contains(String.valueOf(id))) {
+                String oldTime = chatsWithTime.get(id);
+                String newTime = userIDS.get(id);
+                if (oldTime == null) {
+                    chatsWithTime.put(id, newTime);
+                    users.add("UUS! " + String.valueOf(id));
+                } else if (!newTime.equals(oldTime)) {
+                    users.add("UUS! " + String.valueOf(id));
+                } else {
                     users.add(String.valueOf(id));
                 }
             }

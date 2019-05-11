@@ -5,6 +5,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /*
@@ -43,8 +44,8 @@ public class IO {
 
     }
 
-    public static List<String> getChat(String mainUser, DataOutputStream out, DataInputStream in) throws Exception {
-        List<String> test = new ArrayList<>();
+    public static HashMap<String, String> getChat(String mainUser, DataOutputStream out, DataInputStream in) throws Exception {
+        HashMap<String, String> chats = new HashMap<>();
 
         out.writeInt(6);
         out.writeUTF(mainUser);
@@ -54,11 +55,12 @@ public class IO {
 
         int chatCount = in.readInt();
         System.out.println("chatCount " + chatCount);
-        for (int i = 0; i < chatCount; i++) {
-            String line = in.readUTF();
-            test.add(line);
+        for (int i = 0; i < chatCount; i+=2) {
+            String name = in.readUTF();
+            String time = in.readUTF();
+            chats.put(name, time);
         }
-        return test;
+        return chats;
     }
 
     public static void removeChat(String chatID, DataOutputStream outData) throws IOException {

@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -114,8 +115,9 @@ public class DatabaseJSON {
      * @throws Exception
      */
     void addMessage(String chatid, String senderID, String message, String time, JSONObject databaseJSON, JSONArray chatsJson, JSONArray orderJSON) throws Exception {
-
-        JSONArray messages = (JSONArray) (this.getChat(chatid, chatsJson).get("messages"));
+        JSONObject chat = this.getChat(chatid, chatsJson);
+        chat.put("lastMsg", time);
+        JSONArray messages = (JSONArray) (chat.get("messages"));
 
         // Adding the message to the JSON file
         JSONObject messageData = new JSONObject();
@@ -140,6 +142,7 @@ public class DatabaseJSON {
         users.add(participant1);
         users.add(participant2);
         chat.put("users", users);
+        chat.put("lastMsg", Instant.now().toString());
         String chatid = newChatName(users);
         if (getChat(chatid, chatsJson) != null ) {
             chatid = addDistinguisher(chatid, chatsJson);
@@ -275,7 +278,7 @@ public class DatabaseJSON {
         }
     }
 
-    public String[] getChats(String senderId, JSONArray usersJson) {
+    public String[] getChats(String senderId, JSONArray usersJson, JSONArray chatJson) {
         JSONObject user = getUser(senderId, usersJson);
         if (user == null) {
             return new String[0];
@@ -283,10 +286,14 @@ public class DatabaseJSON {
         JSONArray chats = (JSONArray) user.get("chatsIds");
 
         if (chats != null) {
-            int size = chats.size();
+            int size = chats.size() * 2;
             String[] chatIds = new String[size];
-            for (int i = 0; i < chats.size(); i++) {
-                chatIds[i] = (String) chats.get(i);
+            int j = 0;
+            for (int i = 0; i < chats.size() * 2; i+=2) {
+                String chatId = (String) chats.get(j);
+                chatIds[i] = chatId;
+                chatIds[i+1] = (String) this.getChat(chatId, chatJson).get("lastMsg");
+                j++;
             }
             return chatIds;
         }

@@ -35,7 +35,6 @@ public class serverThread implements Runnable {
     void writeMessage(DataOutputStream socketOut, String chatId) throws Exception {
         List<Message> messagesChat = this.database.chatConvo(chatId, this.chatsJSON);
         Collections.sort(messagesChat);
-        //messaged võiks uusimast vanimani sortitud ka olla (võiks olla messagel ka kas sent v saadud küljes olla)
         socketOut.writeInt(messagesChat.size());
         for (Message message : messagesChat) {
             socketOut.writeUTF(message.getSenderid());
@@ -91,10 +90,11 @@ public class serverThread implements Runnable {
                         socketOut.writeUTF("");
                     }
                 } else if (type == 6) {
-                    String[] chats = database.getChats(senderId, usersJSON);
+                    String[] chats = database.getChats(senderId, usersJSON, chatsJSON);
                     if (chats.length != 0) {
                         socketOut.writeInt(chats.length);
                         for (String chat : chats) {
+                            System.out.println(chat);
                             socketOut.writeUTF(chat);
                         }
                     } else {
