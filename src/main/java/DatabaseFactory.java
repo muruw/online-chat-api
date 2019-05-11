@@ -1,10 +1,9 @@
-package client;
+import client.SendMail;
 
 import java.io.InputStreamReader;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 /*
                                        _
@@ -25,6 +24,8 @@ ___________[_]_[_]_[_]______________/_]_[_\___________________________________
 
 public class DatabaseFactory {
 
+    final SendMail sendMail = new SendMail();
+
     /**
      * @return connection to the database
      * @throws Exception
@@ -38,7 +39,7 @@ public class DatabaseFactory {
 
     public InputStreamReader createDatabase(String name) throws Exception {
         ClassLoader classLoader = DatabaseFactory.class.getClassLoader();
-        return new InputStreamReader(Objects.requireNonNull(classLoader.getResourceAsStream(name)), "UTF-8");
+        return new InputStreamReader(classLoader.getResourceAsStream(name), "UTF-8");
     }
 
     /**
@@ -74,6 +75,7 @@ public class DatabaseFactory {
         ps.setString(1, username);
         ps.setString(2, password1);
         ps.executeUpdate();
+
         return true;
     }
 

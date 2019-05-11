@@ -12,7 +12,6 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
@@ -24,13 +23,21 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
+
+import static javafx.scene.paint.Color.SNOW;
 
 public class ClientGUI extends Application {
     private String mainUser;
+    private String mainPassword;
+
+    private int mainConfirmationCode = 0;
+
     private List<String> options;
     private Socket mainSocket;
     private DataOutputStream mainOutStream;
     private DataInputStream mainInStream;
+
 
     public ClientGUI() {
         this.options = new ArrayList<>();
@@ -100,7 +107,7 @@ public class ClientGUI extends Application {
             answer.ifPresent(personsID -> {
                 try {
                     if (!personsID.isEmpty()) {
-                        String result = null;
+                        String result;
                         try {
                             result = IO.newChat(mainUser, personsID, mainOutStream, mainInStream);
                             if (result.equals("")) {
@@ -111,8 +118,6 @@ public class ClientGUI extends Application {
                         }
                         users.clear();
                         updateChats(users, chatsWithTime);
-                    } else {
-
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -139,7 +144,7 @@ public class ClientGUI extends Application {
                             //TODO Some popup to let user know user wasnt added
                         }
                         users.clear();
-                        updateChats(users,chatsWithTime);
+                        updateChats(users, chatsWithTime);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -165,11 +170,12 @@ public class ClientGUI extends Application {
                             //TODO Some popup to let user know user wasnt removed from chat
                         }
                         users.clear();
-                        updateChats(users,chatsWithTime);
+                        updateChats(users, chatsWithTime);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
+
             });
         });
 
@@ -214,7 +220,7 @@ public class ClientGUI extends Application {
                             //TODO Some popup to let user know chat name wasnt chagned
                         }
                         users.clear();
-                        updateChats(users,chatsWithTime);
+                        updateChats(users, chatsWithTime);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -244,11 +250,7 @@ public class ClientGUI extends Application {
         //SendButton
         Button sendButton = new Button("Send");
         sendButton.setPrefSize(70, 40);
-        sendButton.setOnAction(event ->
-
-        {
-            sendMessage(userNames, textArea, chat, scrollPane);
-        });
+        sendButton.setOnAction(event -> sendMessage(userNames, textArea, chat, scrollPane));
 
         //Sends message on enter key press
         textArea.setOnKeyPressed(keyEvent ->
@@ -301,7 +303,44 @@ public class ClientGUI extends Application {
         border.setCenter(userMessages);
 
 
-        Scene tseen1 = new Scene(border, 800, 400, Color.SNOW);
+        Scene tseen1 = new Scene(border, 800, 400, SNOW);
+
+        // confirm registration
+        BorderPane border3 = new BorderPane();
+        Label confirmText = new Label("Please check your email and write the code: ");
+        confirmText.setMinSize(100, 100);
+
+        TextField confirmationCode = new TextField("code");
+        confirmationCode.setMinSize(100, 100);
+
+
+        Button confirmRegistration = new Button("Confirm");
+        confirmRegistration.setOnAction(actionEvent -> {
+
+            try {
+
+                if (mainConfirmationCode == Integer.parseInt(confirmationCode.getText())) {
+                    Long userId = IO.register(mainUser, mainPassword, mainOutStream, mainInStream);
+                    if (userId != -1) {
+                        updateChats(users, chatsWithTime);
+                        chat.setText("Logged in as " + mainUser);
+                        peaLava.setScene(tseen1);
+                    } else {
+                        System.out.println("Vale");
+                    }
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
+        VBox confirmRegistrationBox = new VBox();
+        confirmRegistrationBox.getChildren().addAll(confirmText, confirmationCode, confirmRegistration);
+        confirmRegistrationBox.setAlignment(Pos.CENTER);
+
+        border3.setCenter(confirmRegistrationBox);
+        Scene tseen4 = new Scene(border3, 800, 400, SNOW);
 
 
         //register
@@ -323,15 +362,19 @@ public class ClientGUI extends Application {
 
         {
             if (passwordConfirm.getText().equals(passwordRegister.getText())) {
+                // Send confirmation mail
+                mainConfirmationCode = ThreadLocalRandom.current().nextInt(500, 999);
+                String msg = "Thank you for registering! Your code is: " + mainConfirmationCode + " Please contact looga.krister@gmail.com for more info.";
+                SendMail sendEmail = new SendMail();
+                sendEmail.sendEmail("murumaem@gmail.com", msg);
+
+
                 try {
                     Long userId = IO.register(usernameRegister.getText(), passwordConfirm.getText(), mainOutStream, mainInStream);
-                    if (userId != -1) {
-                        mainUser = usernameRegister.getText();
-                        // TODO: 5/8/19 Lisada id saatmine ka edasi
-                        updateChats(users, chatsWithTime);
-                        chat.setText("Logged in as " + mainUser);
-                        peaLava.setScene(tseen1);
-                    }
+                    loggingIn(peaLava, chatsWithTime, users, chat, tseen1, usernameRegister, userId);
+                    mainUser = usernameRegister.getText();
+                    mainPassword = passwordConfirm.getText();
+                    peaLava.setScene(tseen4);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -345,10 +388,10 @@ public class ClientGUI extends Application {
         registerDetails.setAlignment(Pos.CENTER);
 
         border2.setCenter(registerDetails);
-        Scene tseen3 = new Scene(border2, 800, 400, Color.SNOW);
+        Scene tseen3 = new Scene(border2, 800, 400, SNOW);
 
 
-        //
+        // login
 
         BorderPane border1 = new BorderPane();
 
@@ -367,12 +410,7 @@ public class ClientGUI extends Application {
         {
             try {
                 Long userId = IO.login(username.getText(), password.getText(), mainOutStream, mainInStream);
-                if (userId != -1) {
-                    mainUser = username.getText();
-                    updateChats(users, chatsWithTime);
-                    chat.setText("Logged in as " + mainUser);
-                    peaLava.setScene(tseen1);
-                }
+                loggingIn(peaLava, chatsWithTime, users, chat, tseen1, username, userId);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -393,8 +431,7 @@ public class ClientGUI extends Application {
         loginDetails.setAlignment(Pos.CENTER);
 
         border1.setCenter(loginDetails);
-        Scene tseen2 = new Scene(border1, 800, 400, Color.SNOW);
-
+        Scene tseen2 = new Scene(border1, 800, 400, SNOW);
 
         //
         peaLava.setScene(tseen2);
@@ -402,6 +439,15 @@ public class ClientGUI extends Application {
         peaLava.show();
         //
 
+    }
+
+    private void loggingIn(Stage peaLava, HashMap<String, String> chatsWithTime, ObservableList<String> users, Text chat, Scene tseen1, TextField username, Long userId) {
+        if (userId != -1) {
+            mainUser = username.getText();
+            updateChats(users, chatsWithTime);
+            chat.setText("Logged in as " + mainUser);
+            peaLava.setScene(tseen1);
+        }
     }
 
     private void sendMessage(ListView<String> userNames, TextField textArea, Text chat, ScrollPane scrollPane) {
@@ -416,6 +462,7 @@ public class ClientGUI extends Application {
             e.printStackTrace();
         }
     }
+
     private void updateChats(ObservableList<String> users, HashMap<String, String> chatsWithTime) {
         HashMap<String, String> userIDS;
         try {
@@ -426,9 +473,9 @@ public class ClientGUI extends Application {
                 String newTime = userIDS.get(id);
                 if (oldTime == null) {
                     chatsWithTime.put(id, newTime);
-                    users.add("UUS! " + String.valueOf(id));
+                    users.add("UUS! " + id);
                 } else if (!newTime.equals(oldTime)) {
-                    users.add("UUS! " + String.valueOf(id));
+                    users.add("UUS! " + id);
                 } else {
                     users.add(String.valueOf(id));
                 }
@@ -438,6 +485,7 @@ public class ClientGUI extends Application {
         }
     }
 
+    //Someone made chats and did not inform me. Atm does not not display other users info. Will work together next week to resolve
     public String messageParser(List<String> inputData) {
         StringBuilder textToDisplay = new StringBuilder();
         for (int i = 0; i < inputData.size(); i++) {
