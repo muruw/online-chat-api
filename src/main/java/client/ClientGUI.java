@@ -264,20 +264,12 @@ public class ClientGUI extends Application {
         HBox addRow = new HBox();
         HBox removeRow = new HBox();
         HBox lastRow = new HBox();
-        lastRow.getChildren().
-
-                addAll(refresh, customName);
-        removeRow.getChildren().
-
-                addAll(deleteChat, removePerson);
-        addRow.getChildren().
-
-                addAll(add, addPeople);
+        lastRow.getChildren().addAll(refresh, customName);
+        removeRow.getChildren().addAll(deleteChat, removePerson);
+        addRow.getChildren().addAll(add, addPeople);
 
         VBox userNamesAndButtons = new VBox();
-        userNamesAndButtons.getChildren().
-
-                addAll(userNames, addRow, removeRow, lastRow);
+        userNamesAndButtons.getChildren().addAll(userNames, addRow, removeRow, lastRow);
 
         VBox userMessages = new VBox();
         HBox textAreaWithSend = new HBox();
@@ -308,6 +300,7 @@ public class ClientGUI extends Application {
         // confirm registration
         BorderPane border3 = new BorderPane();
         Label confirmText = new Label("Please check your email and write the code: ");
+        System.out.println(mainConfirmationCode + " code in next scene");
         confirmText.setMinSize(100, 100);
 
         TextField confirmationCode = new TextField("code");
@@ -316,9 +309,7 @@ public class ClientGUI extends Application {
 
         Button confirmRegistration = new Button("Confirm");
         confirmRegistration.setOnAction(actionEvent -> {
-
             try {
-
                 if (mainConfirmationCode == Integer.parseInt(confirmationCode.getText())) {
                     Long userId = IO.register(mainUser, mainPassword, mainOutStream, mainInStream);
                     if (userId != -1) {
@@ -334,6 +325,7 @@ public class ClientGUI extends Application {
                 e.printStackTrace();
             }
         });
+
 
         VBox confirmRegistrationBox = new VBox();
         confirmRegistrationBox.getChildren().addAll(confirmText, confirmationCode, confirmRegistration);
@@ -364,27 +356,18 @@ public class ClientGUI extends Application {
             if (passwordConfirm.getText().equals(passwordRegister.getText())) {
                 // Send confirmation mail
                 mainConfirmationCode = ThreadLocalRandom.current().nextInt(500, 999);
+                mainUser = usernameRegister.getText();
+                mainPassword = passwordRegister.getText();
+                System.out.println(mainConfirmationCode);
                 String msg = "Thank you for registering! Your code is: " + mainConfirmationCode + " Please contact looga.krister@gmail.com for more info.";
                 SendMail sendEmail = new SendMail();
                 sendEmail.sendEmail("murumaem@gmail.com", msg);
-
-
-                try {
-                    Long userId = IO.register(usernameRegister.getText(), passwordConfirm.getText(), mainOutStream, mainInStream);
-                    loggingIn(peaLava, chatsWithTime, users, chat, tseen1, usernameRegister, userId);
-                    mainUser = usernameRegister.getText();
-                    mainPassword = passwordConfirm.getText();
-                    peaLava.setScene(tseen4);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                peaLava.setScene(tseen4);
             }
         });
 
         VBox registerDetails = new VBox();
-        registerDetails.getChildren().
-
-                addAll(registerLabel, usernameRegister, passwordRegister, passwordConfirm, registerConfirm);
+        registerDetails.getChildren().addAll(registerLabel, usernameRegister, passwordRegister, passwordConfirm, registerConfirm);
         registerDetails.setAlignment(Pos.CENTER);
 
         border2.setCenter(registerDetails);
@@ -419,15 +402,14 @@ public class ClientGUI extends Application {
         Button register = new Button("Register");
         register.setOnAction(actionEvent -> peaLava.setScene(tseen3));
 
+
+
+
         VBox loginDetails = new VBox();
         HBox buttons = new HBox();
-        buttons.getChildren().
-
-                addAll(login, register);
+        buttons.getChildren().addAll(login, register);
         buttons.setAlignment(Pos.CENTER);
-        loginDetails.getChildren().
-
-                addAll(welcomeLabel, username, password, buttons);
+        loginDetails.getChildren().addAll(welcomeLabel, username, password, buttons);
         loginDetails.setAlignment(Pos.CENTER);
 
         border1.setCenter(loginDetails);
@@ -498,5 +480,4 @@ public class ClientGUI extends Application {
         }
         return textToDisplay.toString();
     }
-
 }
