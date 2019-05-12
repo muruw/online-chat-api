@@ -2,9 +2,9 @@ package client;
 
 import de.mkammerer.argon2.Argon2;
 import de.mkammerer.argon2.Argon2Factory;
-
 import javafx.application.Application;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
@@ -58,7 +58,7 @@ public class ClientGUI extends Application {
     @Override
     public void start(Stage peaLava) {
         try {
-            mainSocket = new Socket("localhost", 1337);
+            mainSocket = new Socket("localhost", 1338);
             mainOutStream = new DataOutputStream(mainSocket.getOutputStream());
             mainInStream = new DataInputStream(mainSocket.getInputStream());
         } catch (Exception e) {
@@ -66,11 +66,19 @@ public class ClientGUI extends Application {
         }
 
         HashMap<String, String> chatsWithTime = new HashMap<>();
-        ObservableList<String> users = FXCollections.observableArrayList();
+        ObservableList<String> chatIDForDisplay = FXCollections.observableArrayList();
         System.out.println(this.options);
         peaLava.setTitle("Online Chat");
         BorderPane border = new BorderPane();
         HBox navigationBar = new HBox();
+
+        //List of current chat Participants
+        ObservableList<String> usersInChat = FXCollections.observableArrayList();
+
+        usersInChat.addListener((ListChangeListener<String>) c -> {
+            peaLava.setTitle("Online Chat       Users in Chat: " + usersInChat.toString());
+        });
+
 
         //ChatBoxmis
         Text chat = new Text();
@@ -86,14 +94,28 @@ public class ClientGUI extends Application {
 
         // TODO: 4/19/19  usernames from database
         //usernames
-        ListView<String> userNames = new ListView<>(users);
+        ListView<String> userNames = new ListView<>(chatIDForDisplay);
         userNames.setPrefSize(200, 550);
         userNames.setOrientation(Orientation.VERTICAL);
+
+        userNames.setOnMouseClicked(mouseEvent -> {
+            String chatid = userNames.getSelectionModel().getSelectedItem();
+            if (chatid.contains("UUS! ")) {
+                chatIDForDisplay.remove(chatid);
+                chatid = chatid.replace("UUS! ", "");
+                chatIDForDisplay.add(chatid);
+            }
+        });
+
         userNames.getSelectionModel().selectedItemProperty().addListener((observableValue, s, t1) -> {
             try {
                 if (userNames.getSelectionModel().getSelectedItem() != null) {
+                    usersInChat.clear();
+                    usersInChat.add(IO.getChatParticipants(userNames.getSelectionModel().getSelectedItem().replace("UUS! ", ""), mainOutStream, mainInStream));
+
                     String chatid = userNames.getSelectionModel().getSelectedItem();
                     chatid = chatid.replace("UUS! ", "");
+
                     chat.setText(messageParser(IO.refreshMessage(mainUser, chatid, mainOutStream, mainInStream)));
                     scrollPane.setVvalue(1);
                 }
@@ -124,8 +146,8 @@ public class ClientGUI extends Application {
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-                        users.clear();
-                        updateChats(users, chatsWithTime);
+                        chatIDForDisplay.clear();
+                        updateChats(chatIDForDisplay, chatsWithTime);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -141,18 +163,18 @@ public class ClientGUI extends Application {
         {
             TextInputDialog addNewPerson = new TextInputDialog();
             addNewPerson.setTitle("Add an user");
-            addNewPerson.setHeaderText("Enter the users name who you wish to add");
+            addNewPerson.setHeaderText("Enter the chatIDForDisplay name who you wish to add");
             Optional<String> answer = addNewPerson.showAndWait();
 
             answer.ifPresent(personsID -> {
                 if (userNames.getSelectionModel().getSelectedItem() != null) {
                     try {
-                        String result = IO.addPerson(userNames.getSelectionModel().getSelectedItem().replace("UUS! ",""), personsID, mainOutStream, mainInStream);
+                        String result = IO.addPerson(userNames.getSelectionModel().getSelectedItem().replace("UUS! ", ""), personsID, mainOutStream, mainInStream);
                         if (result.equals("")) {
                             //TODO Some popup to let user know user wasnt added
                         }
-                        users.clear();
-                        updateChats(users, chatsWithTime);
+                        chatIDForDisplay.clear();
+                        updateChats(chatIDForDisplay, chatsWithTime);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -173,12 +195,12 @@ public class ClientGUI extends Application {
             answer.ifPresent(personsID -> {
                 if (userNames.getSelectionModel().getSelectedItem() != null) {
                     try {
-                        String result = IO.removeFromChat(userNames.getSelectionModel().getSelectedItem().replace("UUS! ",""), personsID, mainOutStream, mainInStream);
+                        String result = IO.removeFromChat(userNames.getSelectionModel().getSelectedItem().replace("UUS! ", ""), personsID, mainOutStream, mainInStream);
                         if (result.equals("")) {
                             //TODO Some popup to let user know user wasnt removed from chat
                         }
-                        users.clear();
-                        updateChats(users, chatsWithTime);
+                        chatIDForDisplay.clear();
+                        updateChats(chatIDForDisplay, chatsWithTime);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -201,8 +223,8 @@ public class ClientGUI extends Application {
             if (result.get() == ButtonType.OK) {
                 if (userNames.getSelectionModel().getSelectedItem() != null) {
                     try {
-                        IO.removeChat(userNames.getSelectionModel().getSelectedItem().replace("UUS! ",""), mainOutStream);
-                        users.remove(userNames.getSelectionModel().getSelectedItem());
+                        IO.removeChat(userNames.getSelectionModel().getSelectedItem().replace("UUS! ", ""), mainOutStream);
+                        chatIDForDisplay.remove(userNames.getSelectionModel().getSelectedItem());
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -223,12 +245,12 @@ public class ClientGUI extends Application {
             answer.ifPresent(newChatname -> {
                 if (userNames.getSelectionModel().getSelectedItem() != null) {
                     try {
-                        String result = IO.setCustomName(userNames.getSelectionModel().getSelectedItem().replace("UUS! ",""), newChatname, mainOutStream, mainInStream);
+                        String result = IO.setCustomName(userNames.getSelectionModel().getSelectedItem().replace("UUS! ", ""), newChatname, mainOutStream, mainInStream);
                         if (result.equals("")) {
                             //TODO Some popup to let user know chat name wasnt chagned
                         }
-                        users.clear();
-                        updateChats(users, chatsWithTime);
+                        chatIDForDisplay.clear();
+                        updateChats(chatIDForDisplay, chatsWithTime);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -245,13 +267,17 @@ public class ClientGUI extends Application {
         refresh.setOnAction(actionEvent -> {
             if (userNames.getSelectionModel().getSelectedItem() != null) {
                 try {
+                    usersInChat.clear();
+                    usersInChat.add(IO.getChatParticipants(userNames.getSelectionModel().getSelectedItem().replace("UUS! ", ""), mainOutStream, mainInStream));
                     chat.setText(messageParser(IO.refreshMessage(mainUser, userNames.getSelectionModel().getSelectedItem().replace("UUS! ", ""), mainOutStream, mainInStream)));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
-            users.clear();
-            updateChats(users, chatsWithTime);
+
+
+            chatIDForDisplay.clear();
+            updateChats(chatIDForDisplay, chatsWithTime);
             scrollPane.setVvalue(1);
         });
 
@@ -329,7 +355,7 @@ public class ClientGUI extends Application {
                     Long userId = IO.register(mainUser, mainPassword, mainOutStream, mainInStream);
                     System.out.println(mainPassword);
                     if (userId != -1) {
-                        updateChats(users, chatsWithTime);
+                        updateChats(chatIDForDisplay, chatsWithTime);
                         chat.setText("Logged in as " + mainUser);
                         peaLava.setScene(tseen1);
                     } else {
@@ -424,7 +450,7 @@ public class ClientGUI extends Application {
                 String passwordHash2 = argon2.hash(30, 65536, 1, password.getText().toCharArray());
                 System.out.println(passwordHash2);
                 Long userId = IO.login(username.getText(), password.getText(), mainOutStream, mainInStream);
-                loggingIn(peaLava, chatsWithTime, users, chat, tseen1, username, userId);
+                loggingIn(peaLava, chatsWithTime, chatIDForDisplay, chat, tseen1, username, userId);
             } catch (Exception e) {
                 e.getCause();
             }

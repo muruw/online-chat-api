@@ -146,5 +146,12 @@ public class IO {
         outData.writeUTF(newCustomChatname);
         return inData.readUTF();
     }
+
+    public static String getChatParticipants(String chatID,DataOutputStream outDAta, DataInputStream inData) throws IOException {
+        outDAta.writeInt(11);
+        outDAta.writeUTF("");
+        outDAta.writeUTF(chatID);
+        return inData.readUTF();
+    }
 }
 
