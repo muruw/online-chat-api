@@ -10,10 +10,9 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 public class SendMail {
 
-
     public void sendEmail(String to, String msg)
     {
-        final String username = "noflow.noreply@gmail.com\t";
+        final String username = "noflow.noreply@gmail.com";
         final String password = "Noflow123";
 
         Properties props = new Properties();
@@ -31,7 +30,7 @@ public class SendMail {
 
         try {
             Message message = new MimeMessage(session);
-            message.setFrom(new InternetAddress("noflow.noreply@gmail.com"));
+            message.setFrom(new InternetAddress(username));
             message.setRecipients(Message.RecipientType.TO,
                     InternetAddress.parse(to));
             message.setSubject("Registration");
@@ -39,14 +38,13 @@ public class SendMail {
 
             Transport.send(message);
 
-            System.out.println("Done");
+            System.out.println("SendMail : SENDING CONFIRMATION CODE TO USER - SUCCESS");
 
         }
 
         catch (MessagingException e)
         {
-            // throw new RuntimeException(e);
-            System.out.println("Username or Password are incorrect ... exiting !");
+            System.out.println("SendMail : ERROR SENDING CONFIRMATION CODE");
         }
     }
 }
