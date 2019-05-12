@@ -87,8 +87,8 @@ public class ClientGUI extends Application {
                     String chatid = userNames.getSelectionModel().getSelectedItem();
                     String newchatid = chatid.replaceFirst("UUS! ", "");
                     chat.setText(messageParser(IO.refreshMessage(mainUser, newchatid, mainOutStream, mainInStream)));
-                    users.add(newchatid);
-                    users.remove(chatid);
+                    //users.add(newchatid);
+                    //users.remove(chatid);
                     scrollPane.setVvalue(1);
                 }
             } catch (Exception e) {

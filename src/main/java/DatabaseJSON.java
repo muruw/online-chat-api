@@ -164,7 +164,7 @@ public class DatabaseJSON {
             if (id.equals(chatid)) {
                 chatsJson.remove(data);
                 users = (JSONArray) data.get("users");
-                if (isDefaultName(chatid, chatsJson)) {
+                if (isDefaultName(chatid, users)) {
                     users.add(participant);
                     data.put("users", users);
                     newChatid = newChatName(users);
@@ -190,15 +190,19 @@ public class DatabaseJSON {
         JSONArray users = new JSONArray();
         String newChatid;
         String oldChatid = "";
-        System.out.println(chatid);
+        JSONObject data = getChat(chatid, chatsJson);
+        chatsJson.remove(data);
+        users = (JSONArray) data.get("users");
+        users.remove(participant);
+        data.put("users", users);
         if (chatid.contains(".")) {
             String[] chatAndDistictNumb = chatid.split("\\.");
             oldChatid = chatAndDistictNumb[0];
         }
-        if (isDefaultName(oldChatid, chatsJson)) {
-            if (chatid.startsWith(participant)) {
+        if (isDefaultName(chatid, users)) {
+            if (oldChatid.startsWith(participant)) {
                 newChatid = oldChatid.replaceFirst(participant + ";", "");
-            } else if (chatid.endsWith(participant)) {
+            } else if (oldChatid.endsWith(participant)) {
                 newChatid = replaceLast(oldChatid, ";" + participant, "");
             } else {
                 newChatid = oldChatid.replace(";" + participant + ";", ";");
@@ -209,19 +213,9 @@ public class DatabaseJSON {
         } else {
             newChatid = chatid;
         }
+        data.put("id", newChatid);
+        chatsJson.add(data);
 
-        for (int i = 0; i < chatsJson.size(); i++) {
-            JSONObject data = (JSONObject) chatsJson.get(i);
-            String id = (String) data.get("id");
-            if (id.equals(chatid)) {
-                chatsJson.remove(data);
-                users = (JSONArray) data.get("users");
-                users.remove(participant);
-                data.put("users", users);
-                data.put("id", newChatid);
-                chatsJson.add(data);
-            }
-        }
         JSONObject removed = getUser(participant, usersJson);
         usersJson.remove(removed);
         JSONArray chatsIds = (JSONArray) removed.get("chatsIds");
@@ -373,9 +367,7 @@ public class DatabaseJSON {
         return newchatid;
     }
 
-    public boolean isDefaultName(String chatid, JSONArray chatsJson) {
-        JSONObject chat = getChat(chatid, chatsJson);
-        JSONArray users = (JSONArray) chat.get("users");
+    public boolean isDefaultName(String chatid, JSONArray users) {
         return chatid.equals(newChatName(users));
     }
 }

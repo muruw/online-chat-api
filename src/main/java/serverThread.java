@@ -83,7 +83,7 @@ public class serverThread implements Runnable {
                 } else if (type == 4) {
                     database.deleteChat(chatId, databaseObject, usersJSON, chatsJSON); //chati id mida kustutame
                 } else if (type == 5) {
-                    if (database.getUser(senderId, usersJSON) != null && database.getUser(chatId, usersJSON) != null) {
+                    if (database.getUser(senderId, usersJSON) != null && database.getChat(chatId, chatsJSON) != null) {
                         database.removeFromChat(chatId, senderId, databaseObject, usersJSON, chatsJSON); //chati id ja inimese id keda eemaldame chatist
                         socketOut.writeUTF("removedfromchat");
                     } else {
