@@ -35,6 +35,8 @@ public class ClientGUI extends Application {
     private String mainUser;
     private String mainPassword;
     private int mainConfirmationCode = 0;
+    private String mainEmail;
+
 
     Scene homepage;
 
@@ -402,6 +404,7 @@ public class ClientGUI extends Application {
                 try {
                     mainUser = usernameRegister.getText();
                     mainPassword = argon2.hash(30, 65536, 1, passwordConfirm.getText().toCharArray());//passwordConfirm.getText();
+                    mainEmail = userEmail.getText();
                     peaLava.setScene(tseen4);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -440,11 +443,6 @@ public class ClientGUI extends Application {
         login.setOnAction(actionEvent ->
         {
             try {
-                String passwordHash = argon2.hash(30, 65536, 1, password.getText().toCharArray());
-                System.out.println(passwordHash);
-
-                String passwordHash2 = argon2.hash(30, 65536, 1, password.getText().toCharArray());
-                System.out.println(passwordHash2);
                 Long userId = IO.login(username.getText(), password.getText(), mainOutStream, mainInStream);
                 loggingIn(peaLava, chatsWithTime, chatIDForDisplay, chat, tseen1, username, userId);
             } catch (Exception e) {
