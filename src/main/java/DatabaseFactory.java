@@ -1,4 +1,6 @@
 import client.SendMail;
+import de.mkammerer.argon2.Argon2;
+import de.mkammerer.argon2.Argon2Factory;
 
 import java.io.InputStreamReader;
 import java.sql.*;
@@ -25,6 +27,7 @@ ___________[_]_[_]_[_]______________/_]_[_\___________________________________
 public class DatabaseFactory {
 
     final SendMail sendMail = new SendMail();
+    final Argon2 argon2 = Argon2Factory.create();
 
     /**
      * @return connection to the database
@@ -85,7 +88,9 @@ public class DatabaseFactory {
             while (rs.next()) {
                 String rs_username = rs.getString("username");
                 String rs_password = rs.getString("password");
-                if (rs_username.equals(username) && rs_password.equals(password)) {
+                System.out.println(password);
+                System.out.println(rs_password);
+                if (rs_username.equals(username) && argon2.verify(rs_password, password)) {
                     return true;
                 }
             }

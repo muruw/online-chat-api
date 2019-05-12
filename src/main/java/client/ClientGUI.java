@@ -1,5 +1,8 @@
 package client;
 
+import de.mkammerer.argon2.Argon2;
+import de.mkammerer.argon2.Argon2Factory;
+
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -28,6 +31,10 @@ import java.util.concurrent.ThreadLocalRandom;
 import static javafx.scene.paint.Color.SNOW;
 
 public class ClientGUI extends Application {
+
+    // Hashing
+    final private Argon2 argon2 = Argon2Factory.create();
+
     private String mainUser;
     private String mainPassword;
     private int mainConfirmationCode = 0;
@@ -323,6 +330,7 @@ public class ClientGUI extends Application {
 
                 if (mainConfirmationCode == Integer.parseInt(confirmationCode.getText())) {
                     Long userId = IO.register(mainUser, mainPassword, mainOutStream, mainInStream);
+                    System.out.println(mainPassword);
                     if (userId != -1) {
                         updateChats(users, chatsWithTime);
                         chat.setText("Logged in as " + mainUser);
@@ -372,10 +380,9 @@ public class ClientGUI extends Application {
                 SendMail sendEmail = new SendMail();
                 sendEmail.sendEmail(userEmail.getText(), msg);
 
-
                 try {
                     mainUser = usernameRegister.getText();
-                    mainPassword = passwordConfirm.getText();
+                    mainPassword = argon2.hash(30, 65536, 1, passwordConfirm.getText().toCharArray());//passwordConfirm.getText();
                     peaLava.setScene(tseen4);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -412,13 +419,17 @@ public class ClientGUI extends Application {
 
         Button login = new Button("Login");
         login.setOnAction(actionEvent ->
-
         {
             try {
+                String passwordHash = argon2.hash(30, 65536, 1, password.getText().toCharArray());
+                System.out.println(passwordHash);
+
+                String passwordHash2 = argon2.hash(30, 65536, 1, password.getText().toCharArray());
+                System.out.println(passwordHash2);
                 Long userId = IO.login(username.getText(), password.getText(), mainOutStream, mainInStream);
                 loggingIn(peaLava, chatsWithTime, users, chat, tseen1, username, userId);
             } catch (Exception e) {
-                e.printStackTrace();
+                e.getCause();
             }
         });
 
