@@ -85,8 +85,10 @@ public class ClientGUI extends Application {
             try {
                 if (userNames.getSelectionModel().getSelectedItem() != null) {
                     String chatid = userNames.getSelectionModel().getSelectedItem();
-                    chatid = chatid.replaceFirst("UUS! ", "");
-                    chat.setText(messageParser(IO.refreshMessage(mainUser, chatid, mainOutStream, mainInStream)));
+                    String newchatid = chatid.replaceFirst("UUS! ", "");
+                    chat.setText(messageParser(IO.refreshMessage(mainUser, newchatid, mainOutStream, mainInStream)));
+                    users.add(newchatid);
+                    users.remove(chatid);
                     scrollPane.setVvalue(1);
                 }
             } catch (Exception e) {
@@ -237,7 +239,7 @@ public class ClientGUI extends Application {
         refresh.setOnAction(actionEvent -> {
             if (userNames.getSelectionModel().getSelectedItem() != null) {
                 try {
-                    chat.setText(messageParser(IO.refreshMessage(mainUser, userNames.getSelectionModel().getSelectedItem(), mainOutStream, mainInStream)));
+                    chat.setText(messageParser(IO.refreshMessage(mainUser, userNames.getSelectionModel().getSelectedItem().replace("UUS! ", ""), mainOutStream, mainInStream)));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -370,8 +372,6 @@ public class ClientGUI extends Application {
 
 
                 try {
-                    Long userId = IO.register(usernameRegister.getText(), passwordConfirm.getText(), mainOutStream, mainInStream);
-                    loggingIn(peaLava, chatsWithTime, users, chat, tseen1, usernameRegister, userId);
                     mainUser = usernameRegister.getText();
                     mainPassword = passwordConfirm.getText();
                     peaLava.setScene(tseen4);
