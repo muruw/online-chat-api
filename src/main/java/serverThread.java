@@ -138,6 +138,9 @@ public class serverThread implements Runnable {
                     } else {
                         socketOut.writeUTF("");
                     }
+                } else if (type==11) {
+                    String chatNames = database.newChatName((JSONArray)(database.getChat(chatId, chatsJSON).get("users")));
+                    socketOut.writeUTF(chatNames);
                 } else {
                     throw new IllegalArgumentException("type " + type + " pole sobiv");
                 }
