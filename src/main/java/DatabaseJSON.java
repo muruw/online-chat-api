@@ -198,6 +198,8 @@ public class DatabaseJSON {
         if (chatid.contains(".")) {
             String[] chatAndDistictNumb = chatid.split("\\.");
             oldChatid = chatAndDistictNumb[0];
+        } else {
+            oldChatid = chatid;
         }
         if (isDefaultName(chatid, users)) {
             if (oldChatid.startsWith(participant)) {
