@@ -30,8 +30,9 @@ import static javafx.scene.paint.Color.SNOW;
 public class ClientGUI extends Application {
     private String mainUser;
     private String mainPassword;
-
     private int mainConfirmationCode = 0;
+
+    Scene homepage;
 
     private List<String> options;
     private Socket mainSocket;
@@ -85,8 +86,11 @@ public class ClientGUI extends Application {
             try {
                 if (userNames.getSelectionModel().getSelectedItem() != null) {
                     String chatid = userNames.getSelectionModel().getSelectedItem();
-                    chatid = chatid.replaceFirst("UUS! ", "");
-                    chat.setText(messageParser(IO.refreshMessage(mainUser, chatid, mainOutStream, mainInStream)));
+                    String newchatid = chatid.replaceFirst("UUS! ", "");
+                    chat.setText(messageParser(IO.refreshMessage(mainUser, newchatid, mainOutStream, mainInStream)));
+                    // TODO 12/05 2019 annab errori, kui chati peale vajutad, siis hakkab kisama
+                    //users.add(newchatid);
+                    //users.remove(chatid);
                     scrollPane.setVvalue(1);
                 }
             } catch (Exception e) {
@@ -237,7 +241,7 @@ public class ClientGUI extends Application {
         refresh.setOnAction(actionEvent -> {
             if (userNames.getSelectionModel().getSelectedItem() != null) {
                 try {
-                    chat.setText(messageParser(IO.refreshMessage(mainUser, userNames.getSelectionModel().getSelectedItem(), mainOutStream, mainInStream)));
+                    chat.setText(messageParser(IO.refreshMessage(mainUser, userNames.getSelectionModel().getSelectedItem().replace("UUS! ", ""), mainOutStream, mainInStream)));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -264,12 +268,20 @@ public class ClientGUI extends Application {
         HBox addRow = new HBox();
         HBox removeRow = new HBox();
         HBox lastRow = new HBox();
-        lastRow.getChildren().addAll(refresh, customName);
-        removeRow.getChildren().addAll(deleteChat, removePerson);
-        addRow.getChildren().addAll(add, addPeople);
+        lastRow.getChildren().
+
+                addAll(refresh, customName);
+        removeRow.getChildren().
+
+                addAll(deleteChat, removePerson);
+        addRow.getChildren().
+
+                addAll(add, addPeople);
 
         VBox userNamesAndButtons = new VBox();
-        userNamesAndButtons.getChildren().addAll(userNames, addRow, removeRow, lastRow);
+        userNamesAndButtons.getChildren().
+
+                addAll(userNames, addRow, removeRow, lastRow);
 
         VBox userMessages = new VBox();
         HBox textAreaWithSend = new HBox();
@@ -285,9 +297,7 @@ public class ClientGUI extends Application {
         //Setup
         border.setPadding(new Insets(15, 12, 15, 12));
         border.setStyle("-fx-background-color: #fff;");
-        textAreaWithSend.getChildren().
-
-                addAll(textArea, sendButton);
+        textAreaWithSend.getChildren().addAll(textArea, sendButton);
         border.setTop(navigationBar);
         border.setLeft(scrollPane);
         border.setRight(userNamesAndButtons);
@@ -300,7 +310,6 @@ public class ClientGUI extends Application {
         // confirm registration
         BorderPane border3 = new BorderPane();
         Label confirmText = new Label("Please check your email and write the code: ");
-        System.out.println(mainConfirmationCode + " code in next scene");
         confirmText.setMinSize(100, 100);
 
         TextField confirmationCode = new TextField("code");
@@ -309,7 +318,9 @@ public class ClientGUI extends Application {
 
         Button confirmRegistration = new Button("Confirm");
         confirmRegistration.setOnAction(actionEvent -> {
+
             try {
+
                 if (mainConfirmationCode == Integer.parseInt(confirmationCode.getText())) {
                     Long userId = IO.register(mainUser, mainPassword, mainOutStream, mainInStream);
                     if (userId != -1) {
@@ -325,7 +336,6 @@ public class ClientGUI extends Application {
                 e.printStackTrace();
             }
         });
-
 
         VBox confirmRegistrationBox = new VBox();
         confirmRegistrationBox.getChildren().addAll(confirmText, confirmationCode, confirmRegistration);
@@ -343,11 +353,13 @@ public class ClientGUI extends Application {
 
 
         TextField usernameRegister = new TextField("username");
-        usernameRegister.setMaxSize(100, 100);
+        usernameRegister.setMaxSize(150, 100);
         TextField passwordRegister = new TextField("password");
-        passwordRegister.setMaxSize(100, 100);
+        passwordRegister.setMaxSize(150, 100);
         TextField passwordConfirm = new TextField("password confirm");
-        passwordConfirm.setMaxSize(100, 100);
+        passwordConfirm.setMaxSize(150, 100);
+        TextField userEmail = new TextField("email");
+        userEmail.setMaxSize(150, 100);
 
         Button registerConfirm = new Button("Register");
         registerConfirm.setOnAction(actionEvent ->
@@ -356,18 +368,29 @@ public class ClientGUI extends Application {
             if (passwordConfirm.getText().equals(passwordRegister.getText())) {
                 // Send confirmation mail
                 mainConfirmationCode = ThreadLocalRandom.current().nextInt(500, 999);
-                mainUser = usernameRegister.getText();
-                mainPassword = passwordRegister.getText();
-                System.out.println(mainConfirmationCode);
-                String msg = "Thank you for registering! Your code is: " + mainConfirmationCode + " Please contact looga.krister@gmail.com for more info.";
+                String msg = "Thank you for registering! Your code is: " + mainConfirmationCode + ". Please do not reply to this message.";
                 SendMail sendEmail = new SendMail();
-                sendEmail.sendEmail("murumaem@gmail.com", msg);
-                peaLava.setScene(tseen4);
+                sendEmail.sendEmail(userEmail.getText(), msg);
+
+
+                try {
+                    mainUser = usernameRegister.getText();
+                    mainPassword = passwordConfirm.getText();
+                    peaLava.setScene(tseen4);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         });
 
+        Button registerGoBack = new Button("Back");
+        registerGoBack.setOnAction(actionEvent ->
+        {
+            peaLava.setScene(homepage);
+        });
+
         VBox registerDetails = new VBox();
-        registerDetails.getChildren().addAll(registerLabel, usernameRegister, passwordRegister, passwordConfirm, registerConfirm);
+        registerDetails.getChildren().addAll(registerLabel, usernameRegister, passwordRegister, passwordConfirm, userEmail, registerConfirm, registerGoBack);
         registerDetails.setAlignment(Pos.CENTER);
 
         border2.setCenter(registerDetails);
@@ -402,19 +425,20 @@ public class ClientGUI extends Application {
         Button register = new Button("Register");
         register.setOnAction(actionEvent -> peaLava.setScene(tseen3));
 
-
-
-
         VBox loginDetails = new VBox();
         HBox buttons = new HBox();
-        buttons.getChildren().addAll(login, register);
+        buttons.getChildren().
+
+                addAll(login, register);
         buttons.setAlignment(Pos.CENTER);
-        loginDetails.getChildren().addAll(welcomeLabel, username, password, buttons);
+        loginDetails.getChildren().
+
+                addAll(welcomeLabel, username, password, buttons);
         loginDetails.setAlignment(Pos.CENTER);
 
         border1.setCenter(loginDetails);
         Scene tseen2 = new Scene(border1, 800, 400, SNOW);
-
+        homepage = tseen2;
         //
         peaLava.setScene(tseen2);
 
@@ -480,4 +504,5 @@ public class ClientGUI extends Application {
         }
         return textToDisplay.toString();
     }
+
 }

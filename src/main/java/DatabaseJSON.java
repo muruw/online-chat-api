@@ -164,13 +164,18 @@ public class DatabaseJSON {
             if (id.equals(chatid)) {
                 chatsJson.remove(data);
                 users = (JSONArray) data.get("users");
-                users.add(participant);
-                data.put("users", users);
-                newChatid = newChatName(users);
-                if (getChat(newChatid, chatsJson) != null ) {
-                    newChatid = addDistinguisher(newChatid, chatsJson);
+                if (isDefaultName(chatid, users)) {
+                    users.add(participant);
+                    data.put("users", users);
+                    newChatid = newChatName(users);
+                    if (getChat(newChatid, chatsJson) != null) {
+                        newChatid = addDistinguisher(newChatid, chatsJson);
+                    }
+                } else {
+                    users.add(participant);
+                    data.put("users", users);
+                    newChatid = chatid;
                 }
-
                 data.put("id", newChatid);
                 chatsJson.add(data);
             }
@@ -184,34 +189,33 @@ public class DatabaseJSON {
     public JSONArray removeFromChat(String chatid, String participant, JSONObject databaseJson, JSONArray usersJson, JSONArray chatsJson) throws Exception {
         JSONArray users = new JSONArray();
         String newChatid;
-        System.out.println(chatid);
+        String oldChatid = "";
+        JSONObject data = getChat(chatid, chatsJson);
+        chatsJson.remove(data);
+        users = (JSONArray) data.get("users");
+        users.remove(participant);
+        data.put("users", users);
         if (chatid.contains(".")) {
-            String[] chatAndDistictNumb = chatid.split(".");
-            chatid = chatAndDistictNumb[0];
+            String[] chatAndDistictNumb = chatid.split("\\.");
+            oldChatid = chatAndDistictNumb[0];
         }
-        if (chatid.startsWith(participant)) {
-            newChatid = chatid.replaceFirst(participant + ";", "");
-        } else if (chatid.endsWith(participant)) {
-            newChatid = replaceLast(chatid,";" + participant, "");
-        } else {
-            newChatid = chatid.replace(";"+participant+ ";", ";");
-        }
-        if (getChat(newChatid, chatsJson) != null ) {
-            newChatid = addDistinguisher(newChatid, chatsJson);
-        }
-
-        for (int i = 0; i < chatsJson.size(); i++) {
-            JSONObject data = (JSONObject) chatsJson.get(i);
-            String id = (String) data.get("id");
-            if (id.equals(chatid)) {
-                chatsJson.remove(data);
-                users = (JSONArray) data.get("users");
-                users.remove(participant);
-                data.put("users", users);
-                data.put("id", newChatid);
-                chatsJson.add(data);
+        if (isDefaultName(chatid, users)) {
+            if (oldChatid.startsWith(participant)) {
+                newChatid = oldChatid.replaceFirst(participant + ";", "");
+            } else if (oldChatid.endsWith(participant)) {
+                newChatid = replaceLast(oldChatid, ";" + participant, "");
+            } else {
+                newChatid = oldChatid.replace(";" + participant + ";", ";");
             }
+            if (getChat(newChatid, chatsJson) != null) {
+                newChatid = addDistinguisher(newChatid, chatsJson);
+            }
+        } else {
+            newChatid = chatid;
         }
+        data.put("id", newChatid);
+        chatsJson.add(data);
+
         JSONObject removed = getUser(participant, usersJson);
         usersJson.remove(removed);
         JSONArray chatsIds = (JSONArray) removed.get("chatsIds");
@@ -361,5 +365,9 @@ public class DatabaseJSON {
         usersjson = changeChatNameOnAllParticipants(oldchatid, newchatid, users, usersjson);
         putIntoDatabase(databasejson, chatsjson, usersjson);
         return newchatid;
+    }
+
+    public boolean isDefaultName(String chatid, JSONArray users) {
+        return chatid.equals(newChatName(users));
     }
 }
