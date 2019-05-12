@@ -368,7 +368,7 @@ public class ClientGUI extends Application {
             if (passwordConfirm.getText().equals(passwordRegister.getText())) {
                 // Send confirmation mail
                 mainConfirmationCode = ThreadLocalRandom.current().nextInt(500, 999);
-                String msg = "Thank you for registering! Your code is: " + mainConfirmationCode + " Please contact looga.krister@gmail.com for more info.";
+                String msg = "Thank you for registering! Your code is: " + mainConfirmationCode + ". Please do not reply to this message.";
                 SendMail sendEmail = new SendMail();
                 sendEmail.sendEmail(userEmail.getText(), msg);
 
