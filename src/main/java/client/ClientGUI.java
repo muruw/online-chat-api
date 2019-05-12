@@ -22,10 +22,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static javafx.scene.paint.Color.SNOW;
@@ -74,7 +71,6 @@ public class ClientGUI extends Application {
 
         //List of current chat Participants
         ObservableList<String> usersInChat = FXCollections.observableArrayList();
-
         usersInChat.addListener((ListChangeListener<String>) c -> {
             peaLava.setTitle("Online Chat       Users in Chat: " + usersInChat.toString());
         });
