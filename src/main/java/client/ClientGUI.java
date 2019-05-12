@@ -87,8 +87,9 @@ public class ClientGUI extends Application {
                     String chatid = userNames.getSelectionModel().getSelectedItem();
                     String newchatid = chatid.replaceFirst("UUS! ", "");
                     chat.setText(messageParser(IO.refreshMessage(mainUser, newchatid, mainOutStream, mainInStream)));
-                    users.add(newchatid);
-                    users.remove(chatid);
+                    // TODO 12/05 2019 annab errori, kui chati peale vajutad, siis hakkab kisama
+                    //users.add(newchatid);
+                    //users.remove(chatid);
                     scrollPane.setVvalue(1);
                 }
             } catch (Exception e) {
@@ -358,6 +359,8 @@ public class ClientGUI extends Application {
         passwordRegister.setMaxSize(100, 100);
         TextField passwordConfirm = new TextField("password confirm");
         passwordConfirm.setMaxSize(100, 100);
+        TextField userEmail = new TextField("email");
+        passwordConfirm.setMaxSize(100, 100);
 
         Button registerConfirm = new Button("Register");
         registerConfirm.setOnAction(actionEvent ->
@@ -368,7 +371,7 @@ public class ClientGUI extends Application {
                 mainConfirmationCode = ThreadLocalRandom.current().nextInt(500, 999);
                 String msg = "Thank you for registering! Your code is: " + mainConfirmationCode + " Please contact looga.krister@gmail.com for more info.";
                 SendMail sendEmail = new SendMail();
-                sendEmail.sendEmail("murumaem@gmail.com", msg);
+                sendEmail.sendEmail(userEmail.getText(), msg);
 
 
                 try {
@@ -382,9 +385,7 @@ public class ClientGUI extends Application {
         });
 
         VBox registerDetails = new VBox();
-        registerDetails.getChildren().
-
-                addAll(registerLabel, usernameRegister, passwordRegister, passwordConfirm, registerConfirm);
+        registerDetails.getChildren().addAll(registerLabel, usernameRegister, passwordRegister, passwordConfirm, userEmail, registerConfirm);
         registerDetails.setAlignment(Pos.CENTER);
 
         border2.setCenter(registerDetails);
