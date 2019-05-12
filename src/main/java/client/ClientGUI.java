@@ -93,11 +93,8 @@ public class ClientGUI extends Application {
             try {
                 if (userNames.getSelectionModel().getSelectedItem() != null) {
                     String chatid = userNames.getSelectionModel().getSelectedItem();
-                    String newchatid = chatid.replaceFirst("UUS! ", "");
-                    chat.setText(messageParser(IO.refreshMessage(mainUser, newchatid, mainOutStream, mainInStream)));
-                    // TODO 12/05 2019 annab errori, kui chati peale vajutad, siis hakkab kisama
-                    //users.add(newchatid);
-                    //users.remove(chatid);
+                    chatid = chatid.replace("UUS! ", "");
+                    chat.setText(messageParser(IO.refreshMessage(mainUser, chatid, mainOutStream, mainInStream)));
                     scrollPane.setVvalue(1);
                 }
             } catch (Exception e) {
@@ -150,7 +147,7 @@ public class ClientGUI extends Application {
             answer.ifPresent(personsID -> {
                 if (userNames.getSelectionModel().getSelectedItem() != null) {
                     try {
-                        String result = IO.addPerson(userNames.getSelectionModel().getSelectedItem(), personsID, mainOutStream, mainInStream);
+                        String result = IO.addPerson(userNames.getSelectionModel().getSelectedItem().replace("UUS! ",""), personsID, mainOutStream, mainInStream);
                         if (result.equals("")) {
                             //TODO Some popup to let user know user wasnt added
                         }
@@ -176,7 +173,7 @@ public class ClientGUI extends Application {
             answer.ifPresent(personsID -> {
                 if (userNames.getSelectionModel().getSelectedItem() != null) {
                     try {
-                        String result = IO.removeFromChat(userNames.getSelectionModel().getSelectedItem(), personsID, mainOutStream, mainInStream);
+                        String result = IO.removeFromChat(userNames.getSelectionModel().getSelectedItem().replace("UUS! ",""), personsID, mainOutStream, mainInStream);
                         if (result.equals("")) {
                             //TODO Some popup to let user know user wasnt removed from chat
                         }
@@ -204,7 +201,7 @@ public class ClientGUI extends Application {
             if (result.get() == ButtonType.OK) {
                 if (userNames.getSelectionModel().getSelectedItem() != null) {
                     try {
-                        IO.removeChat(userNames.getSelectionModel().getSelectedItem(), mainOutStream);
+                        IO.removeChat(userNames.getSelectionModel().getSelectedItem().replace("UUS! ",""), mainOutStream);
                         users.remove(userNames.getSelectionModel().getSelectedItem());
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -226,7 +223,7 @@ public class ClientGUI extends Application {
             answer.ifPresent(newChatname -> {
                 if (userNames.getSelectionModel().getSelectedItem() != null) {
                     try {
-                        String result = IO.setCustomName(userNames.getSelectionModel().getSelectedItem(), newChatname, mainOutStream, mainInStream);
+                        String result = IO.setCustomName(userNames.getSelectionModel().getSelectedItem().replace("UUS! ",""), newChatname, mainOutStream, mainInStream);
                         if (result.equals("")) {
                             //TODO Some popup to let user know chat name wasnt chagned
                         }
@@ -470,7 +467,7 @@ public class ClientGUI extends Application {
     private void sendMessage(ListView<String> userNames, TextField textArea, Text chat, ScrollPane scrollPane) {
         try {
             if (userNames.getSelectionModel().getSelectedItem() != null) {
-                List<String> messages = IO.sendMessage(textArea.getText(), mainUser, userNames.getSelectionModel().getSelectedItem(), mainOutStream, mainInStream);
+                List<String> messages = IO.sendMessage(textArea.getText(), mainUser, userNames.getSelectionModel().getSelectedItem().replace("UUS! ", ""), mainOutStream, mainInStream);
                 textArea.clear();
                 chat.setText(messageParser(messages));
                 scrollPane.setVvalue(1);
@@ -492,6 +489,7 @@ public class ClientGUI extends Application {
                     chatsWithTime.put(id, newTime);
                     users.add("UUS! " + id);
                 } else if (!newTime.equals(oldTime)) {
+                    chatsWithTime.put(id, newTime);
                     users.add("UUS! " + id);
                 } else {
                     users.add(String.valueOf(id));

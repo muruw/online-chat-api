@@ -34,6 +34,7 @@ public class Client {
                 outData.writeInt(5);
                 outData.writeUTF(args[1]);
                 outData.writeUTF(args[2]);
+                System.out.println(inData.readUTF());
             } else if (args[0].equals("chats")) {
                 outData.writeInt(6);
                 outData.writeUTF(args[1]);
