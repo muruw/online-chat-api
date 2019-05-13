@@ -55,7 +55,7 @@ public class ClientGUI extends Application {
     @Override
     public void start(Stage peaLava) {
         try {
-            mainSocket = new Socket("localhost", 1338);
+            mainSocket = new Socket("51.15.118.3", 1338);
             mainOutStream = new DataOutputStream(mainSocket.getOutputStream());
             mainInStream = new DataInputStream(mainSocket.getInputStream());
         } catch (Exception e) {
