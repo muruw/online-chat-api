@@ -21,13 +21,13 @@ public class serverThread implements Runnable {
     JSONArray chatsJSON;
 
 
-    public serverThread(Socket socket, DatabaseJSON database) throws Exception {
+    public serverThread(Socket socket, DatabaseObjectJSON databaseObjectJSON) throws Exception {
         this.socket = socket;
-        this.database = database;
+        this.database = databaseObjectJSON.getDatabase();
         this.databaseObject = database.createDatabase();
-        this.usersJSON = database.getArrayJSON(databaseObject, "client");
-        this.orderJSON = database.getArrayJSON(databaseObject, "client_order");
-        this.chatsJSON = database.getArrayJSON(databaseObject, "chats");
+        this.usersJSON = databaseObjectJSON.getUsersJSON();
+        this.orderJSON = databaseObjectJSON.getOrderJSON();
+        this.chatsJSON = databaseObjectJSON.getChatsJSON();
     }
 
     // saadab hetkel tagasi mõlema id-d vastavalt kas nad olid sõnumi saatja v saaja
@@ -57,90 +57,110 @@ public class serverThread implements Runnable {
                 System.out.println("Chatid " + chatId);
                 System.out.println("Server is running");
                 if (type == 1) {
-                    System.out.println("in send message");
-                    String text = socketIn.readUTF();
-                    System.out.println(text);
-                    String time = Instant.now().toString();
-                    database.addMessage(chatId, senderId, text, time, databaseObject, chatsJSON, orderJSON); //saatja id ja chati kuhu saadab id
-                    writeMessage(socketOut, chatId);
-                    System.out.println("saadetud sõnumid tagasi");
+                    synchronized (databaseObject) {
+                        System.out.println("in send message");
+                        String text = socketIn.readUTF();
+                        System.out.println(text);
+                        String time = Instant.now().toString();
+                        database.addMessage(chatId, senderId, text, time, databaseObject, chatsJSON, orderJSON); //saatja id ja chati kuhu saadab id
+                        writeMessage(socketOut, chatId);
+                        System.out.println("saadetud sõnumid tagasi");
+                    }
                 } else if (type == 0) {
                     writeMessage(socketOut, chatId);
                 } else if (type == 2) {
-                    if (database.getUser(senderId, usersJSON) != null && database.getUser(chatId, usersJSON) != null) {
-                        String thischatid = database.newChat(senderId, chatId, databaseObject, chatsJSON, usersJSON); // mõlema inimese id-d
-                        socketOut.writeUTF(thischatid);
-                    } else {
-                        socketOut.writeUTF("");
+                    synchronized (databaseObject) {
+                        if (database.getUser(senderId, usersJSON) != null && database.getUser(chatId, usersJSON) != null) {
+                            String thischatid = database.newChat(senderId, chatId, databaseObject, chatsJSON, usersJSON); // mõlema inimese id-d
+                            socketOut.writeUTF(thischatid);
+                        } else {
+                            socketOut.writeUTF("");
+                        }
                     }
                 } else if (type == 3) {
-                    if (database.getUser(senderId, usersJSON) != null && database.getChat(chatId, chatsJSON) != null) {
-                        String thischatid = database.addToChat(chatId, senderId, databaseObject, usersJSON, chatsJSON);
-                        socketOut.writeUTF(thischatid);
-                    } else {
-                        socketOut.writeUTF("");
+                    synchronized (databaseObject) {
+                        if (database.getUser(senderId, usersJSON) != null && database.getChat(chatId, chatsJSON) != null) {
+                            String thischatid = database.addToChat(chatId, senderId, databaseObject, usersJSON, chatsJSON);
+                            socketOut.writeUTF(thischatid);
+                        } else {
+                            socketOut.writeUTF("");
+                        }
                     }
                 } else if (type == 4) {
-                    database.deleteChat(chatId, databaseObject, usersJSON, chatsJSON); //chati id mida kustutame
+                    synchronized (databaseObject) {
+                        database.deleteChat(chatId, databaseObject, usersJSON, chatsJSON); //chati id mida kustutame
+                    }
                 } else if (type == 5) {
-                    if (database.getUser(senderId, usersJSON) != null && database.getChat(chatId, chatsJSON) != null) {
-                        database.removeFromChat(chatId, senderId, databaseObject, usersJSON, chatsJSON); //chati id ja inimese id keda eemaldame chatist
-                        socketOut.writeUTF("removedfromchat");
-                    } else {
-                        socketOut.writeUTF("");
+                    synchronized (databaseObject) {
+                        if (database.getUser(senderId, usersJSON) != null && database.getChat(chatId, chatsJSON) != null) {
+                            database.removeFromChat(chatId, senderId, databaseObject, usersJSON, chatsJSON); //chati id ja inimese id keda eemaldame chatist
+                            socketOut.writeUTF("removedfromchat");
+                        } else {
+                            socketOut.writeUTF("");
+                        }
                     }
                 } else if (type == 6) {
-                    String[] chats = database.getChats(senderId, usersJSON, chatsJSON);
-                    if (chats.length != 0) {
-                        socketOut.writeInt(chats.length);
-                        for (String chat : chats) {
-                            System.out.println(chat);
-                            socketOut.writeUTF(chat);
+                    synchronized (databaseObject) {
+                        String[] chats = database.getChats(senderId, usersJSON, chatsJSON);
+                        if (chats.length != 0) {
+                            socketOut.writeInt(chats.length);
+                            for (String chat : chats) {
+                                System.out.println(chat);
+                                socketOut.writeUTF(chat);
+                            }
+                        } else {
+                            socketOut.writeInt(0);
                         }
-                    } else {
-                        socketOut.writeInt(0);
                     }
                 } else if (type == 7) {
-                    database.deleteUser(senderId, databaseObject, usersJSON);
+                    synchronized (databaseObject) {
+                        database.deleteUser(senderId, databaseObject, usersJSON);
+                    }
                 } else if (type == 8 || type == 9) {
-                    DatabaseFactory factory = new DatabaseFactory();
-                    try (Connection connection = factory.connectToDatabase()) {
-                        try (Reader setupDatabase = factory.createDatabase("setup.sql")) {
-                            RunScript.execute(connection, setupDatabase);
-                        }
-                        String pw = socketIn.readUTF();
-                        if (type == 8) {
-                            boolean success = factory.login(connection, senderId, pw);
-
-                            if (success) {
-                                socketOut.writeLong(factory.getUserId(connection, senderId));
-                            } else {
-                                socketOut.writeLong(-1);
+                    synchronized (databaseObject) {
+                        DatabaseFactory factory = new DatabaseFactory();
+                        try (Connection connection = factory.connectToDatabase()) {
+                            try (Reader setupDatabase = factory.createDatabase("setup.sql")) {
+                                RunScript.execute(connection, setupDatabase);
                             }
-                        }
-                        if (type == 9) {
-                            boolean success = factory.register(connection, senderId, pw, pw);
-                            if (success) {
-                                long id = factory.getUserId(connection, senderId);
-                                database.addUser(senderId, databaseObject, usersJSON);
-                                socketOut.writeLong(id);
-                                System.out.println("database add was success");
-                            } else {
-                                socketOut.writeLong(-1);
+                            String pw = socketIn.readUTF();
+                            if (type == 8) {
+                                boolean success = factory.login(connection, senderId, pw);
+
+                                if (success) {
+                                    socketOut.writeLong(factory.getUserId(connection, senderId));
+                                } else {
+                                    socketOut.writeLong(-1);
+                                }
+                            }
+                            if (type == 9) {
+                                boolean success = factory.register(connection, senderId, pw, pw);
+                                if (success) {
+                                    long id = factory.getUserId(connection, senderId);
+                                    database.addUser(senderId, databaseObject, usersJSON);
+                                    socketOut.writeLong(id);
+                                    System.out.println("database add was success");
+                                } else {
+                                    socketOut.writeLong(-1);
+                                }
                             }
                         }
                     }
                 } else if (type == 10) {
-                    String newChatid = socketIn.readUTF();
-                    if (database.getChat(chatId, chatsJSON) != null) {
-                        newChatid = database.customName(chatId, newChatid, databaseObject, chatsJSON, usersJSON);
-                        socketOut.writeUTF(newChatid);
-                    } else {
-                        socketOut.writeUTF("");
+                    synchronized (databaseObject) {
+                        String newChatid = socketIn.readUTF();
+                        if (database.getChat(chatId, chatsJSON) != null) {
+                            newChatid = database.customName(chatId, newChatid, databaseObject, chatsJSON, usersJSON);
+                            socketOut.writeUTF(newChatid);
+                        } else {
+                            socketOut.writeUTF("");
+                        }
                     }
                 } else if (type==11) {
-                    String chatNames = database.newChatName((JSONArray)(database.getChat(chatId, chatsJSON).get("users")));
-                    socketOut.writeUTF(chatNames);
+                    synchronized (databaseObject) {
+                        String chatNames = database.newChatName((JSONArray) (database.getChat(chatId, chatsJSON).get("users")));
+                        socketOut.writeUTF(chatNames);
+                    }
                 } else {
                     throw new IllegalArgumentException("type " + type + " pole sobiv");
                 }

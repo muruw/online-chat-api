@@ -11,7 +11,7 @@ public class Server {
         try (ServerSocket ss = new ServerSocket(1338)) {
             while (true) {
                 Socket socket = ss.accept();
-                new Thread(new serverThread(socket, databaseJSON)).start();
+                new Thread(new serverThread(socket, databaseObjectJSON)).start();
             }
         }
     }
