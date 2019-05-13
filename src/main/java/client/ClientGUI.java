@@ -485,7 +485,7 @@ public class ClientGUI extends Application {
     private void loggingIn(Stage peaLava, HashMap<String, String> chatswithtime, ObservableList<String> users, Text chat, Scene tseen1, TextField username, Long userId) throws Exception{
         if (userId != -1) {
             mainUser = username.getText();
-            chatswithtime = notificationInReader();
+            chatswithtime = notificationInReader(chatswithtime);
             updateChats(users, chatswithtime);
             chat.setText("Logged in as " + mainUser);
             peaLava.setScene(tseen1);
@@ -553,8 +553,7 @@ public class ClientGUI extends Application {
         }
     }
 
-    public HashMap<String, String> notificationInReader() throws IOException {
-        HashMap<String, String> chatsWithTime = new HashMap<>();
+    public HashMap<String, String> notificationInReader(HashMap<String, String> chatsWithTime) throws IOException {
         System.out.println(mainUser);
         try (DataInputStream dis = new DataInputStream(new FileInputStream(mainUser + ".dat"))) {
             int paljuChate = dis.readInt();
