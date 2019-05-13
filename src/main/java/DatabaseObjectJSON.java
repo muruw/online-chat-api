@@ -9,12 +9,12 @@ public class DatabaseObjectJSON {
     JSONArray orderJSON;
     JSONArray chatsJSON;
 
-    public DatabaseObjectJSON(DatabaseJSON database, JSONObject databaseObject, JSONArray usersJSON, JSONArray orderJSON, JSONArray chatsJSON) {
+    public DatabaseObjectJSON(DatabaseJSON database) throws Exception {
         this.database = database;
-        this.databaseObject = databaseObject;
-        this.usersJSON = usersJSON;
-        this.orderJSON = orderJSON;
-        this.chatsJSON = chatsJSON;
+        this.databaseObject = database.createDatabase();
+        this.usersJSON = database.getArrayJSON(databaseObject, "client");
+        this.orderJSON = database.getArrayJSON(databaseObject, "client_order");
+        this.chatsJSON = database.getArrayJSON(databaseObject, "chats");
     }
 
     public DatabaseJSON getDatabase() {
