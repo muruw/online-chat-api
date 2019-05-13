@@ -18,9 +18,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -473,12 +471,22 @@ public class ClientGUI extends Application {
         peaLava.show();
         //
 
+        peaLava.setOnCloseRequest(closeEvent ->
+        {
+            try {
+                notificationSaver(chatsWithTime);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
     }
 
-    private void loggingIn(Stage peaLava, HashMap<String, String> chatsWithTime, ObservableList<String> users, Text chat, Scene tseen1, TextField username, Long userId) {
+    private void loggingIn(Stage peaLava, HashMap<String, String> chatswithtime, ObservableList<String> users, Text chat, Scene tseen1, TextField username, Long userId) throws Exception{
         if (userId != -1) {
             mainUser = username.getText();
-            updateChats(users, chatsWithTime);
+            chatswithtime = notificationInReader();
+            updateChats(users, chatswithtime);
             chat.setText("Logged in as " + mainUser);
             peaLava.setScene(tseen1);
         }
@@ -534,4 +542,28 @@ public class ClientGUI extends Application {
         return textToDisplay.toString();
     }
 
+    public void notificationSaver(HashMap<String, String> chatswithTime) throws Exception {
+        File tehtudF = new File(mainUser + ".dat");
+        try (DataOutputStream dos = new DataOutputStream(new FileOutputStream(tehtudF))) {
+            dos.writeInt(chatswithTime.size());
+            for (String chat : chatswithTime.keySet()) {
+                dos.writeUTF(chat);
+                dos.writeUTF(chatswithTime.get(chat));
+            }
+        }
+    }
+
+    public HashMap<String, String> notificationInReader() throws IOException {
+        HashMap<String, String> chatsWithTime = new HashMap<>();
+        System.out.println(mainUser);
+        try (DataInputStream dis = new DataInputStream(new FileInputStream(mainUser + ".dat"))) {
+            int paljuChate = dis.readInt();
+            for (int i = 0; i < paljuChate; i++) {
+                chatsWithTime.put(dis.readUTF(), dis.readUTF());
+            }
+        } catch (FileNotFoundException e) {
+            return chatsWithTime;
+        }
+        return chatsWithTime;
+    }
 }
