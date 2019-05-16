@@ -20,7 +20,10 @@ import javafx.stage.Stage;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static javafx.scene.paint.Color.SNOW;
@@ -287,7 +290,9 @@ public class ClientGUI extends Application {
 
         {
             if (keyEvent.getCode() == KeyCode.ENTER) {
-                sendMessage(userNames, textArea, chat, scrollPane);
+                if (userNames.getSelectionModel().getSelectedItem() != null) {
+                    sendMessage(userNames, textArea, chat, scrollPane);
+                }
             }
         });
 
@@ -482,7 +487,7 @@ public class ClientGUI extends Application {
 
     }
 
-    private void loggingIn(Stage peaLava, HashMap<String, String> chatswithtime, ObservableList<String> users, Text chat, Scene tseen1, TextField username, Long userId) throws Exception{
+    private void loggingIn(Stage peaLava, HashMap<String, String> chatswithtime, ObservableList<String> users, Text chat, Scene tseen1, TextField username, Long userId) throws Exception {
         if (userId != -1) {
             mainUser = username.getText();
             chatswithtime = notificationInReader(chatswithtime);
