@@ -406,7 +406,7 @@ public class ClientGUI extends Application {
 
                 try {
                     mainUser = usernameRegister.getText();
-                    mainPassword = argon2.hash(30, 65536, 1, passwordConfirm.getText().toCharArray());//passwordConfirm.getText();
+                    mainPassword = argon2.hash(10, 65536, 1, passwordConfirm.getText().toCharArray());//passwordConfirm.getText();
                     mainEmail = userEmail.getText();
                     peaLava.setScene(tseen4);
                 } catch (Exception e) {
